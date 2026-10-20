@@ -1,0 +1,112 @@
+---
+/**
+ * The site's single button/link control. Renders an <a> when `href` is
+ * given, a <button> otherwise — same visual system either way.
+ *
+ *  · ≥44px touch targets in every size (§12).
+ *  · Primary = solid accent with black text (white on #FE7743 fails
+ *    contrast; black passes at ~7.9:1).
+ *  · Focus ring comes from the global :focus-visible rule.
+ *  · The optional trailing arrow mirrors under RTL (§7.4).
+ */
+interface Props {
+  /** Render as a link to this URL. */
+  href?: string;
+  variant?: "primary" | "secondary";
+  size?: "md" | "lg";
+  /** Button type — only meaningful without `href`. */
+  type?: "button" | "submit" | "reset";
+  target?: string;
+  rel?: string;
+  /** Suggest downloading the link target (used by the résumé PDFs). */
+  download?: string;
+  disabled?: boolean;
+  id?: string;
+  ariaLabel?: string;
+  /** Show a trailing directional arrow (mirrors in RTL). */
+  arrow?: boolean;
+  class?: string;
+}
+
+const {
+  href,
+  variant = "primary",
+  size = "md",
+  type = "button",
+  target,
+  rel,
+  download,
+  disabled,
+  id,
+  ariaLabel,
+  arrow = false,
+  class: className,
+} = Astro.props;
+
+const base =
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg transition duration-200";
+const sizes = size === "lg" ? "px-7 py-3 text-base" : "px-5 py-2.5 text-sm";
+const variants = {
+  primary: "bg-accent font-semibold text-black hover:brightness-110",
+  secondary:
+    "border border-hairline-strong text-text hover:border-accent hover:text-accent",
+} as const;
+const classes = [base, sizes, variants[variant], className];
+---
+
+{
+  href ? (
+    <a
+      href={href}
+      target={target}
+      rel={rel}
+      download={download}
+      id={id}
+      aria-label={ariaLabel}
+      class:list={classes}
+    >
+      <slot />
+      {arrow && (
+        <svg
+          class="size-4 rtl:-scale-x-100"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M5 12h14m-6-6 6 6-6 6" />
+        </svg>
+      )}
+    </a>
+  ) : (
+    <button
+      type={type}
+      id={id}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      class:list={[
+        ...classes,
+        "disabled:pointer-events-none disabled:opacity-60",
+      ]}
+    >
+      <slot />
+      {arrow && (
+        <svg
+          class="size-4 rtl:-scale-x-100"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M5 12h14m-6-6 6 6-6 6" />
+        </svg>
+      )}
+    </button>
+  )
+}

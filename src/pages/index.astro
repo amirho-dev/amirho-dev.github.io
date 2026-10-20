@@ -1,0 +1,32 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/home/Hero.astro";
+import TechMarquee from "../components/home/TechMarquee.astro";
+import FeaturedProjects from "../components/home/FeaturedProjects.astro";
+import ExpertiseGrid from "../components/home/ExpertiseGrid.astro";
+import LatestPosts from "../components/home/LatestPosts.astro";
+import CtaBanner from "../components/home/CtaBanner.astro";
+import type { LocaleCode } from "../i18n/config";
+import { t } from "../i18n/utils";
+
+const locale: LocaleCode = "en";
+const dict = t(locale);
+---
+
+<BaseLayout
+  locale={locale}
+  title={dict.meta.home.title}
+  description={dict.meta.home.description}
+>
+  <Hero locale={locale} />
+  <TechMarquee locale={locale} />
+  <FeaturedProjects locale={locale} />
+  <ExpertiseGrid locale={locale} />
+  <LatestPosts locale={locale} />
+  <CtaBanner locale={locale} />
+</BaseLayout>
+
+<script>
+  import { initReveals } from "../lib/reveal";
+  initReveals();
+</script>

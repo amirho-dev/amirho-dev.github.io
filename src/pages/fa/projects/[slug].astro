@@ -1,0 +1,47 @@
+---
+import { getCollection, render } from "astro:content";
+import ProjectLayout from "../../../layouts/ProjectLayout.astro";
+import type { LocaleCode } from "../../../i18n/config";
+
+/**
+ * Project case study (FA mirror, §9) — renders the paired FA MDX with
+ * the same ProjectLayout; slug pairing key shared with the EN route.
+ */
+const locale: LocaleCode = "fa";
+
+export async function getStaticPaths() {
+  const entries = await getCollection(
+    "projects",
+    ({ data }) => data.locale === "fa" && !data.draft,
+  );
+  return entries.map((entry) => ({
+    params: { slug: entry.id.split("/")[1] ?? entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+
+// Prev/next walk the timeline ASCENDING by year:
+// «قبلی» = پروژه‌ی قدیمی‌تر، «بعدی» = پروژه‌ی جدیدتر.
+const timeline = (
+  await getCollection(
+    "projects",
+    ({ data }) => data.locale === "fa" && !data.draft,
+  )
+).sort((a, b) => a.data.year - b.data.year);
+const index = timeline.findIndex((candidate) => candidate.id === entry.id);
+const prev = index > 0 ? timeline[index - 1] : undefined;
+const next =
+  index >= 0 && index < timeline.length - 1 ? timeline[index + 1] : undefined;
+---
+
+<ProjectLayout entry={entry} locale={locale} prev={prev} next={next}>
+  <Content />
+</ProjectLayout>
+
+<script>
+  import { initReveals } from "../../../lib/reveal";
+  initReveals();
+</script>

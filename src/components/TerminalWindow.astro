@@ -1,0 +1,65 @@
+---
+/**
+ * Reusable terminal chrome — the visual shell shared by the hero boot
+ * sequence, code demos and the Lab console.
+ *
+ * Locked design decisions (§7.4):
+ *  · Windows are LTR in BOTH locales — commands and code are Latin.
+ *  · Windows are DARK in BOTH themes — all internal colors use the
+ *    theme-independent `--term-*` tokens (light-mode text tokens would
+ *    go dark-on-dark inside them).
+ *
+ * Phase 8 update: an optional `header-extra` slot renders window
+ * controls at the header's end (the hero's "Skip intro" button). The
+ * slot wrapper is always present but empty when unused, so all earlier
+ * usages are unaffected. Header padding tightened py-3 → py-2.5 to fit
+ * a 44px control comfortably.
+ */
+interface Props {
+  /** Latin window title, e.g. '~/amirho — zsh'. Never localized. */
+  title?: string;
+  class?: string;
+  /** Extra classes for the LTR body region (e.g. a min-height for the Lab). */
+  bodyClass?: string;
+}
+
+const { title, class: className, bodyClass } = Astro.props;
+---
+
+<div
+  class:list={[
+    "overflow-hidden rounded-xl border border-term-border bg-term shadow-card",
+    className,
+  ]}
+>
+  <div
+    class="flex items-center gap-2 border-b border-term-border bg-term-header px-4 py-2.5"
+    dir="ltr"
+  >
+    <span class="flex shrink-0 gap-1.5" aria-hidden="true">
+      <span class="size-3 rounded-full bg-term-dot-r"></span>
+      <span class="size-3 rounded-full bg-term-dot-y"></span>
+      <span class="size-3 rounded-full bg-term-dot-g"></span>
+    </span>
+    {
+      title && (
+        <span class="ms-3 truncate font-mono text-xs text-term-muted">
+          {title}
+        </span>
+      )
+    }
+    <span class="ms-auto flex items-center gap-2">
+      <slot name="header-extra" />
+    </span>
+  </div>
+
+  <div
+    dir="ltr"
+    class:list={[
+      "overflow-x-auto bg-term p-4 font-mono text-sm leading-relaxed text-term-text sm:p-5",
+      bodyClass,
+    ]}
+  >
+    <slot />
+  </div>
+</div>

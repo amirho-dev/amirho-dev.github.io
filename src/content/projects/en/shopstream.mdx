@@ -1,0 +1,105 @@
+---
+title: "ShopStream"
+description: "A real-time analytics dashboard that turned three storefronts' nightly CSV ritual into a live view of revenue, carts and checkout funnels."
+role: "Solo full-stack engineer — architecture, backend, frontend, deployment and operations."
+domain: "web"
+stack:
+  - "Next.js"
+  - "TypeScript"
+  - "Node.js"
+  - "PostgreSQL"
+  - "Redis"
+  - "WebSockets"
+year: 2023
+image: "../../../assets/projects/shopstream.svg"
+heroAlt: "ShopStream dashboard interface with a live revenue chart, real-time event feed, checkout funnel and sidebar navigation."
+locale: "en"
+draft: false
+seo:
+  title: "ShopStream Case Study — AmirHo | Real-Time Web Analytics"
+  description: "How I built ShopStream: a Next.js, TypeScript, PostgreSQL and Redis dashboard streaming 50k e-commerce events a day — and cut admin reporting time by 70%."
+---
+
+ShopStream is a real-time analytics dashboard I built for a retailer operating three storefronts — two regional shops and one international store. Before ShopStream, "analytics" at this company meant a morning spreadsheet ritual; after it, the same people watched orders land live and caught a failing flash sale within the hour. This is the full story: what was broken, how I chose the architecture, what shipped, and what the numbers looked like ninety days later.
+
+## Problem
+
+The retailer's three storefronts ran on two different platforms, and neither offered reporting that crossed store boundaries. The status quo was a nightly CSV export from each platform, stitched together by hand in Excel every morning.
+
+That process failed in four distinct ways:
+
+1. **The data was always stale.** By the time anyone read the numbers, they described yesterday. Flash sales — the exact moments when minutes matter — were over before anyone could see them.
+2. **It consumed real people-hours.** Two admins spent roughly 95 minutes every morning assembling the report before they could even start reacting to it.
+3. **Refund and stock problems surfaced days late.** A batch of defective units sold across two storefronts took three days to become visible in the merged spreadsheet, because refund data lived in a separate export nobody reconciled daily.
+4. **Nobody trusted the numbers anyway.** Timestamps, currencies and time zones were normalized by hand, which meant every anomaly triggered a re-verification before anyone believed it.
+
+The brief I was given was modest on paper — "a dashboard" — but the underlying need was sharper: decisions about pricing, promotions and inventory were being made 24 hours blind, and the people making them knew it.
+
+## Process
+
+I spend most of my engineering time before writing any product code, and this project was no exception.
+
+### Auditing the event stream
+
+Before designing anything, I instrumented the storefronts for two weeks with a lightweight event collector. I needed the real shape of the data, not the imagined one: actual event types, actual volume, actual burst behavior during promotions. The audit surfaced about 50,000 events per day at peak, dominated by `page.view` and `cart.updated`, with a pronounced burst profile — a flash sale could triple the event rate within minutes. That single fact ruled out several architectures that would have worked fine at average load and collapsed at peak.
+
+### Choosing push over pull
+
+The obvious design — a dashboard that polls an API every few seconds — was the first thing I rejected. With multiple admin users and multiple widgets, naive polling multiplies queries by users by refresh rate, and every widget shows a slightly different snapshot of "now".
+
+I compared three transports seriously: short-interval polling, Server-Sent Events, and WebSockets. WebSockets won for three reasons: one connection per client regardless of widget count; true bidirectionality, which let the client scope its own subscription (a user viewing the funnel page shouldn't receive the event firehose); and clean backpressure handling on the server. I kept an SSE fallback path for the handful of corporate proxies that mangle long-lived WebSocket connections.
+
+### Designing the data model
+
+The second structural decision was an **append-only event store**. Events are facts; they never get updated, only annotated. Raw events land in a PostgreSQL `events` table with a typed envelope and a JSONB payload, and the aggregate numbers the dashboard shows come from continuous rollup tables rather than on-the-fly `GROUP BY` queries over millions of rows.
+
+This split — raw facts immutable, aggregates derived — is what made the whole system tractable. Rebuilding a rollup after a bug is a pure function of the event log; nothing is ever lost or double-counted, because the enrichment pipeline is idempotent by construction.
+
+## Solution
+
+The shipped system has three moving parts: an ingestion service, a PostgreSQL + Redis core, and a Next.js dashboard.
+
+The ingestion service is a small Node.js app that receives events from the storefronts, validates every payload against a strict TypeScript envelope, and pushes them into a Redis Stream. Redis acts as the shock absorber — if PostgreSQL slows down during a rollup rebuild, the stream buffers, nothing drops. A background consumer drains the stream into PostgreSQL and fans the events out to connected WebSocket clients.
+
+The envelope validation is deliberately paranoid, because an append-only store makes garbage permanent:
+
+```ts
+interface EventEnvelope<T extends EventName = EventName> {
+  name: T;
+  storeId: StoreId;
+  occurredAt: string; // ISO 8601, set by the client
+  receivedAt: string; // set by the server, never trusted from outside
+  payload: EventPayload<T>;
+}
+
+function assertValidEnvelope(input: unknown): EventEnvelope {
+  if (typeof input !== "object" || input === null) {
+    throw new InvalidEventError("envelope must be an object");
+  }
+  const candidate = input as Partial<EventEnvelope>;
+  if (!isEventName(candidate.name)) {
+    throw new InvalidEventError(
+      `unknown event name: ${String(candidate.name)}`,
+    );
+  }
+  if (!isStoreId(candidate.storeId)) {
+    throw new InvalidEventError("unrecognized storeId");
+  }
+  if (!isIsoTimestamp(candidate.occurredAt)) {
+    throw new InvalidEventError("occurredAt must be ISO 8601");
+  }
+  // The payload is validated per event name; anything that fails is
+  // logged to a dead-letter table and never enters the event store.
+  return parsePayload(candidate as EventEnvelope);
+}
+```
+
+Because validation runs before the write, the event store only ever contains envelopes that passed the schema. Anything that fails validation is routed to a dead-letter table with the raw payload and a rejection reason, so instrumented clients can be debugged without ever polluting the facts.
+
+The dashboard itself is a Next.js app in strict TypeScript. Server-rendered pages handle the initial paint and the historical views, while a single shared WebSocket connection drives every live widget, scoped per route. Revenue, carts, and the checkout funnel all read from the same rollup tables, so no two widgets on screen disagree about what "now" means.
+
+## Outcome
+
+Ninety days after launch, the nightly CSV ritual was gone. Reporting time dropped by about 70% — the two admins who used to spend 95 minutes every morning assembling numbers now spend a few minutes reviewing anomalies the system already flagged. A failing flash sale was caught within the hour instead of the next morning, and the refund-tracking problem disappeared entirely because refund events flow through the same pipeline as sales.
+
+The architecture that made this possible wasn't the dashboard, the framework, or even WebSockets. It was the decision — made before any product code was written — to treat events as immutable facts and derive every number from them, so that correctness is a property of the pipeline rather than of the query someone happens to write on a Tuesday.

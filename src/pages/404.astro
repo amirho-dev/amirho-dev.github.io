@@ -1,0 +1,115 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import TerminalWindow from "../components/TerminalWindow.astro";
+import Button from "../components/Button.astro";
+import type { LocaleCode } from "../i18n/config";
+import { getLocalizedPath, t } from "../i18n/utils";
+
+/**
+ * Bilingual, terminal-themed 404 (§11 Phase 12).
+ *
+ *  · GitHub Pages serves this one static file for ANY unmatched path —
+ *    including /fa/* — so both languages live here side by side: an EN
+ *    block and a self-contained lang="fa" dir="rtl" island (its
+ *    typography comes from the :lang(fa) token swap in global.css).
+ *  · The document shell uses the default locale (x-default = EN), so
+ *    the EN block owns the single <h1>; the Farsi heading is an h2
+ *    styled to match.
+ *  · The terminal echoes the attempted path — filled in client-side
+ *    (it is unknowable at build time), with a static fallback for no-JS.
+ *  · noindex via the BaseLayout head slot — a 404 has no business in
+ *    search indexes even when served with the correct status.
+ */
+const locale: LocaleCode = "en";
+const en = t("en");
+const fa = t("fa");
+---
+
+<BaseLayout
+  locale={locale}
+  title={en.meta.notFound.title}
+  description={en.meta.notFound.description}
+>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex" />
+  </Fragment>
+
+  <section class="container-site py-16 md:py-24">
+    <div class="mx-auto max-w-3xl">
+      <TerminalWindow title="amirho@portfolio — bash" class="mx-auto max-w-xl">
+        <div class="flex flex-col gap-1">
+          <p class="whitespace-pre-wrap break-words">
+            <span class="select-none text-term-muted" aria-hidden="true"
+              >guest@amirho:~$
+            </span>cd <span data-nf-path>/this-page</span>
+          </p>
+          <p class="whitespace-pre-wrap break-words text-term-muted">
+            bash: cd: <span data-nf-path>/this-page</span>: command not found
+          </p>
+        </div>
+      </TerminalWindow>
+
+      <div class="mt-10 grid items-start gap-6 md:grid-cols-2">
+        <section
+          lang="en"
+          dir="ltr"
+          class="rounded-xl border border-hairline bg-surface p-6 shadow-card"
+        >
+          <p class="mono-label mb-3 text-accent" aria-hidden="true">
+            $ whoami --lost
+          </p>
+          <h1 class="text-3xl md:text-4xl">{en["404"].title}</h1>
+          <p class="mt-3 text-sm text-muted">{en["404"].text}</p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <Button href={getLocalizedPath("/", "en")} arrow
+              >{en["404"].home}</Button
+            >
+            <Button
+              href={getLocalizedPath("/projects", "en")}
+              variant="secondary"
+            >
+              {en["404"].projects}
+            </Button>
+          </div>
+        </section>
+
+        <section
+          lang="fa"
+          dir="rtl"
+          class="rounded-xl border border-hairline bg-surface p-6 shadow-card"
+        >
+          <p class="mono-label mb-3 text-accent" aria-hidden="true">
+            $ whoami --lost
+          </p>
+          <h2 class="text-3xl md:text-4xl">{fa["404"].title}</h2>
+          <p class="mt-3 text-sm text-muted">{fa["404"].text}</p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <Button href={getLocalizedPath("/", "fa")} arrow
+              >{fa["404"].home}</Button
+            >
+            <Button
+              href={getLocalizedPath("/projects", "fa")}
+              variant="secondary"
+            >
+              {fa["404"].projects}
+            </Button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  // Fill the attempted path into the terminal echo (both occurrences).
+  // Malformed percent-sequences keep the raw pathname.
+  let path = window.location.pathname || "/";
+  try {
+    path = decodeURIComponent(path) || "/";
+  } catch {
+    /* keep the raw pathname */
+  }
+  document.querySelectorAll("[data-nf-path]").forEach((el) => {
+    el.textContent = path;
+  });
+</script>

@@ -1,0 +1,84 @@
+---
+import { getCollection } from "astro:content";
+import type { LocaleCode } from "../../i18n/config";
+import { formatDate, getLocalizedPath, t } from "../../i18n/utils";
+import SectionHeading from "../SectionHeading.astro";
+
+/**
+ * Two most recent posts for the locale. Dates render Gregorian (EN) /
+ * Jalali with Persian digits (FA) via formatDate. The Farsi date drops
+ * the mono font — JetBrains Mono has no Farsi digits (§7.4 audit).
+ */
+interface Props {
+  locale: LocaleCode;
+}
+
+const { locale } = Astro.props;
+const dict = t(locale);
+
+const entries = (
+  await getCollection(
+    "blog",
+    ({ data }) => data.locale === locale && !data.draft,
+  )
+)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 2);
+---
+
+<section class="container-site py-16 md:py-24">
+  <SectionHeading
+    path="blog"
+    title={dict.home.postsTitle}
+    link={{
+      href: getLocalizedPath("/blog", locale),
+      label: dict.home.postsViewAll,
+    }}
+    class="mb-10 md:mb-14"
+  />
+  <div data-reveal-group class="grid gap-6 md:grid-cols-2">
+    {
+      entries.map((post) => {
+        const slug = post.id.split("/")[1] ?? post.id;
+        return (
+          <article data-reveal-item>
+            <a
+              href={getLocalizedPath(`/blog/${slug}`, locale)}
+              class="group flex h-full flex-col gap-3 rounded-xl border border-hairline bg-surface p-6 shadow-card transition-colors duration-200 hover:border-accent/60"
+            >
+              <p
+                class:list={[
+                  locale === "fa" ? "text-xs" : "font-mono text-xs",
+                  "text-muted",
+                ]}
+              >
+                <time datetime={post.data.pubDate.toISOString().slice(0, 10)}>
+                  {formatDate(post.data.pubDate, locale)}
+                </time>
+              </p>
+              <h3 class="font-display text-xl transition-colors duration-200 group-hover:text-accent">
+                {post.data.title}
+              </h3>
+              <p class="flex-1 text-sm text-muted">{post.data.description}</p>
+              <span class="inline-flex items-center gap-2 text-sm font-medium text-accent">
+                {dict.common.readMore}
+                <svg
+                  class="size-4 rtl:-scale-x-100"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h14m-6-6 6 6-6 6" />
+                </svg>
+              </span>
+            </a>
+          </article>
+        );
+      })
+    }
+  </div>
+</section>

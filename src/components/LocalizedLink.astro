@@ -1,0 +1,28 @@
+---
+import { defaultLocale, type LocaleCode } from "../i18n/config";
+import { getLocalizedPath, isLocale } from "../i18n/utils";
+
+/**
+ * Locale-aware anchor. Pass `href` WITHOUT any `/fa` prefix — the
+ * correct prefix for the target locale is added automatically, so the
+ * same component serves both locales with zero drift.
+ * External URLs, `mailto:`/`tel:` links and pure `#anchor`s pass
+ * through untouched. All standard anchor attributes are forwarded.
+ */
+interface Props extends astroHTML.JSX.AnchorHTMLAttributes {
+  /** Site-internal path, locale-prefixed or not — normalized automatically. */
+  href: string;
+  /** Target locale override; defaults to the current route's locale. */
+  locale?: LocaleCode;
+}
+
+const { href, locale, class: className, ...rest } = Astro.props;
+
+const resolved: LocaleCode =
+  locale ??
+  (isLocale(Astro.currentLocale) ? Astro.currentLocale : defaultLocale);
+---
+
+<a href={getLocalizedPath(href, resolved)} class={className} {...rest}>
+  <slot />
+</a>

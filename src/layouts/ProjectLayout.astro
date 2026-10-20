@@ -1,0 +1,229 @@
+---
+import { Image } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+import BaseLayout from "./BaseLayout.astro";
+import { localeConfigs, type LocaleCode } from "../i18n/config";
+import { t } from "../i18n/utils";
+import LocalizedLink from "../components/LocalizedLink.astro";
+import TagChip from "../components/TagChip.astro";
+
+/**
+ * Case-study template (§11 Phase 9): terminal-flavored back link, h1 +
+ * lead, a four-column meta row (role / stack / year / domain), the
+ * hand-authored SVG mockup via astro:assets (eager + explicit
+ * dimensions), the MDX body inside .prose (the Problem / Process /
+ * Solution / Results h2s are authored in the content files themselves —
+ * Phase 6 documented decision), and a prev/next timeline walk.
+ *
+ * The per-page CreativeWork JSON-LD (§8) is assembled here and merged
+ * into BaseLayout's site-wide schemas.
+ *
+ * Gallery note: each project ships exactly ONE hand-authored SVG mockup
+ * (the §9 tree defines three project assets and §10.3 bans stock
+ * imagery) — the hero figure IS the gallery.
+ */
+interface Props {
+  entry: CollectionEntry<"projects">;
+  locale: LocaleCode;
+  /** Older project on the ascending-year walk; rendered at the start side. */
+  prev?: CollectionEntry<"projects">;
+  /** Newer project on the ascending-year walk; rendered at the end side. */
+  next?: CollectionEntry<"projects">;
+}
+
+const { entry, locale, prev, next } = Astro.props;
+
+const cfg = localeConfigs[locale];
+const dict = t(locale);
+const isFa = locale === "fa";
+
+const site = (Astro.site?.href ?? Astro.url.origin).replace(/\/+$/, "");
+const url = new URL(Astro.url.pathname, site).href;
+
+// Locale-aware small label — Latin mono in EN, plain sans in FA (the
+// mono-label utility is Latin-only by design, §7.4).
+const labelClass = isFa ? "text-xs text-muted" : "mono-label text-muted";
+
+const slugOf = (e: CollectionEntry<"projects">): string =>
+  e.id.split("/")[1] ?? e.id;
+
+// CreativeWork JSON-LD — translated fields + inLanguage, linked back to
+// the site-wide Person/WebSite @ids. Dates are omitted deliberately:
+// frontmatter carries a year only, and fabricating month/day precision
+// into schema would be lying with markup.
+const creativeWork: Record<string, unknown> = {
+  "@context": "https://schema.org",
+  "@type": "CreativeWork",
+  "@id": `${url}#creative-work`,
+  name: entry.data.title,
+  description: entry.data.seo.description,
+  image: new URL(entry.data.image.src, site).href,
+  url,
+  inLanguage: cfg.htmlLang,
+  keywords: entry.data.stack.join(", "),
+  genre: entry.data.domain,
+  isPartOf: { "@id": `${site}/#website` },
+  author: { "@id": `${site}/#person` },
+};
+---
+
+<BaseLayout
+  locale={locale}
+  title={entry.data.seo.title}
+  description={entry.data.seo.description}
+  jsonLd={creativeWork}
+>
+  <article class="container-site py-12 md:py-16">
+    <p class="mono-label text-accent" aria-hidden="true">
+      $ cat ~/projects/{slugOf(entry)}.mdx
+    </p>
+
+    <LocalizedLink
+      href="/projects"
+      locale={locale}
+      class="group mt-4 inline-flex min-h-11 items-center gap-2 text-sm text-muted transition-colors duration-200 hover:text-accent"
+    >
+      <svg
+        class="size-4 rtl:-scale-x-100"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M19 12H5m6 6-6-6 6-6"></path>
+      </svg>
+      <span class={labelClass}>{dict.projects.backToAll}</span>
+    </LocalizedLink>
+
+    <header class="mt-6">
+      <h1 class="max-w-3xl">{entry.data.title}</h1>
+      <p class="mt-4 max-w-2xl text-lg text-muted">{entry.data.description}</p>
+    </header>
+
+    <dl
+      data-reveal="fade"
+      class="mt-10 grid gap-6 rounded-xl border border-hairline bg-surface p-6 shadow-card sm:grid-cols-2 lg:grid-cols-4"
+    >
+      <div class="flex flex-col gap-2">
+        <dt class={labelClass}>{dict.projects.metaRole}</dt>
+        <dd class="text-sm">{entry.data.role}</dd>
+      </div>
+      <div class="flex flex-col gap-2">
+        <dt class={labelClass}>{dict.projects.metaStack}</dt>
+        <dd>
+          <ul class="flex flex-wrap gap-1.5">
+            {
+              entry.data.stack.map((tech) => (
+                <li>
+                  <TagChip label={tech} />
+                </li>
+              ))
+            }
+          </ul>
+        </dd>
+      </div>
+      <div class="flex flex-col gap-2">
+        <dt class={labelClass}>{dict.projects.metaYear}</dt>
+        <dd class="font-mono text-sm" dir="ltr">{entry.data.year}</dd>
+      </div>
+      <div class="flex flex-col gap-2">
+        <dt class={labelClass}>{dict.projects.metaDomain}</dt>
+        <dd>
+          <span
+            class="inline-flex items-center rounded-md bg-accent px-2 py-1 font-mono text-xs font-bold uppercase tracking-widest text-black"
+          >
+            {entry.data.domain}
+          </span>
+        </dd>
+      </div>
+    </dl>
+
+    <figure
+      data-reveal="fade"
+      class="mt-10 overflow-hidden rounded-xl border border-hairline bg-surface shadow-card"
+    >
+      <Image
+        src={entry.data.image}
+        alt={entry.data.heroAlt}
+        width={entry.data.image.width}
+        height={entry.data.image.height}
+        loading="eager"
+        decoding="async"
+        fetchpriority="high"
+        class="h-auto w-full"
+      />
+    </figure>
+
+    <div class="prose mt-12">
+      <slot />
+    </div>
+
+    {
+      (prev || next) && (
+        <nav
+          data-reveal="fade"
+          class="mt-16 border-t border-hairline pt-8"
+          aria-label={`${dict.projects.prevProject} · ${dict.projects.nextProject}`}
+        >
+          <div class="grid gap-4 sm:grid-cols-2">
+            {prev && (
+              <LocalizedLink
+                href={`/projects/${slugOf(prev)}`}
+                locale={locale}
+                class="group flex min-h-11 flex-col gap-1.5 rounded-lg border border-hairline bg-surface p-4 transition-colors duration-200 hover:border-accent/60"
+              >
+                <span class="flex items-center gap-2">
+                  <svg
+                    class="size-4 rtl:-scale-x-100"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M19 12H5m6 6-6-6 6-6" />
+                  </svg>
+                  <span class={labelClass}>{dict.projects.prevProject}</span>
+                </span>
+                <span class="font-display text-lg transition-colors duration-200 group-hover:text-accent">
+                  {prev.data.title}
+                </span>
+              </LocalizedLink>
+            )}
+            {next && (
+              <LocalizedLink
+                href={`/projects/${slugOf(next)}`}
+                locale={locale}
+                class="group flex min-h-11 flex-col gap-1.5 rounded-lg border border-hairline bg-surface p-4 transition-colors duration-200 hover:border-accent/60 sm:col-start-2 sm:items-end sm:text-end"
+              >
+                <span class="flex items-center gap-2">
+                  <span class={labelClass}>{dict.projects.nextProject}</span>
+                  <svg
+                    class="size-4 rtl:-scale-x-100"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 12h14m-6-6 6 6-6 6" />
+                  </svg>
+                </span>
+                <span class="font-display text-lg transition-colors duration-200 group-hover:text-accent">
+                  {next.data.title}
+                </span>
+              </LocalizedLink>
+            )}
+          </div>
+        </nav>
+      )
+    }
+  </article>
+</BaseLayout>

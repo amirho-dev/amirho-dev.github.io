@@ -1,0 +1,121 @@
+---
+import type { LocaleCode } from "../i18n/config";
+import { getLocalizedPath, t } from "../i18n/utils";
+import LocalizedLink from "./LocalizedLink.astro";
+import ThemeToggle from "./ThemeToggle.astro";
+import LanguageSwitcher from "./LanguageSwitcher.astro";
+import MobileNav from "./MobileNav.astro";
+
+/**
+ * Sticky site header: `~/AmirHo` logo, desktop nav (md+), theme +
+ * language toggles, and the hamburger that opens <MobileNav /> below md.
+ * The same six destinations are mirrored in the footer; the resolved
+ * link list (labels + active state) is shared with MobileNav so the two
+ * navigations can never drift.
+ */
+interface Props {
+  locale: LocaleCode;
+}
+
+const { locale } = Astro.props;
+const dict = t(locale);
+
+const NAV_ITEMS = [
+  { key: "home", path: "/" },
+  { key: "about", path: "/about" },
+  { key: "projects", path: "/projects" },
+  { key: "blog", path: "/blog" },
+  { key: "lab", path: "/lab" },
+  { key: "contact", path: "/contact" },
+] as const;
+
+// Trailing-slash-safe comparison across dev/preview/build servers.
+const normalize = (value: string): string =>
+  value.length > 1 && value.endsWith("/") ? value.slice(0, -1) : value;
+const currentPath = normalize(Astro.url.pathname);
+
+const links = NAV_ITEMS.map((item) => {
+  const href = getLocalizedPath(item.path, locale);
+  return {
+    label: dict.nav[item.key],
+    href,
+    active: normalize(href) === currentPath,
+  };
+});
+
+const desktopLinkClass = (active: boolean): string =>
+  [
+    "flex min-h-11 items-center rounded-lg px-3 text-sm transition-colors duration-200",
+    active ? "text-accent" : "text-muted hover:text-text",
+  ].join(" ");
+---
+
+<header
+  class="sticky top-0 z-40 border-b border-hairline bg-bg/85 backdrop-blur-md"
+>
+  <div class="container-site flex h-16 items-center justify-between gap-3">
+    <LocalizedLink
+      href="/"
+      locale={locale}
+      aria-label={`AmirHo — ${dict.nav.home}`}
+      class="flex min-h-11 items-center rounded-lg font-mono text-lg font-bold transition-colors duration-200 hover:text-accent"
+    >
+      {
+        /* The brand mark is Latin/mono in BOTH locales — pinned LTR so the
+          `~/` never reorders under RTL (§7.4). */
+      }
+      <span dir="ltr"><span class="text-accent">~/</span>AmirHo</span>
+    </LocalizedLink>
+
+    <nav class="hidden md:block" aria-label={dict.a11y.primaryNav}>
+      <ul class="flex items-center gap-1">
+        {
+          links.map((link) => (
+            <li>
+              <LocalizedLink
+                href={link.href}
+                locale={locale}
+                aria-current={link.active ? "page" : undefined}
+                class={desktopLinkClass(link.active)}
+              >
+                {link.label}
+              </LocalizedLink>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <ThemeToggle locale={locale} />
+      {
+        /* Wrapped in a div (not a `hidden md:flex` class on the switcher
+          itself) so it never fights the switcher's own `flex` root. */
+      }
+      <div class="hidden md:block">
+        <LanguageSwitcher locale={locale} />
+      </div>
+      <button
+        type="button"
+        data-mobile-nav-open
+        class="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-hairline text-muted transition-colors duration-200 hover:border-hairline-strong hover:text-text md:hidden"
+        aria-controls="mobile-nav"
+        aria-expanded="false"
+        aria-label={dict.a11y.openMenu}
+      >
+        <svg
+          class="size-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M4 7h16M4 12h16M4 17h10"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <MobileNav locale={locale} links={links} />
+</header>

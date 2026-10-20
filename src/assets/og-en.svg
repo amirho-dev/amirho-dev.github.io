@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <title>AmirHo — Full-Stack Developer, Mobile &amp; AI Engineer</title>
+  <!-- Hand-authored Open Graph artwork (EN) — rasterized to /og-en.png
+       by scripts/generate-og.mjs. Fonts are resolved by the rasterizer:
+       JetBrains Mono (brand mark, prompts, URL) · Space Grotesk (copy).
+       The bottom strip is the decorative brand gradient — background
+       only, never text (§6.1). Colors are the locked dark-terminal
+       palette; OG cards are single-purpose static renders, so tokens
+       are inlined here rather than referenced from global.css. -->
+  <defs>
+    <linearGradient id="brand-strip" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FF9F00"/>
+      <stop offset="1" stop-color="#F4631E"/>
+    </linearGradient>
+  </defs>
+
+  <!-- canvas -->
+  <rect width="1200" height="630" fill="#000000"/>
+
+  <!-- terminal window -->
+  <rect x="90" y="80" width="1020" height="470" rx="16" fill="#0C1219" stroke="#22303D" stroke-width="2"/>
+  <path d="M90 96a16 16 0 0 1 16-16h988a16 16 0 0 1 16 16v40H90z" fill="#16212B"/>
+  <line x1="90" y1="136" x2="1110" y2="136" stroke="#22303D" stroke-width="2"/>
+  <circle cx="122" cy="108" r="7" fill="#FF5F57"/>
+  <circle cx="148" cy="108" r="7" fill="#FEBC2E"/>
+  <circle cx="174" cy="108" r="7" fill="#28C840"/>
+  <text x="206" y="115" font-family="'JetBrains Mono', monospace" font-size="17" fill="#93A7B4">amirho@portfolio — bash</text>
+
+  <!-- whoami -->
+  <text x="138" y="208" font-family="'JetBrains Mono', monospace" font-size="26">
+    &lt;tspan fill="#FE7743"&gt;
+    <tspan fill="#FE7743">$</tspan><tspan fill="#93A7B4" dx="10">whoami</tspan>
+  lt;/tspan&gt;&lt;tspan fill="#93A7B4" dx="10"&gt;whoami&lt;/tspan&gt;
+  </text>
+
+  <!-- brand mark -->
+  <text x="138" y="322" font-family="'JetBrains Mono', monospace" font-size="100" font-weight="700">
+    &lt;tspan fill="#FE7743"&gt;~/&lt;/tspan&gt;&lt;tspan fill="#EFEEEA"&gt;AmirHo&lt;/tspan&gt;
+  </text>
+
+  <!-- role line -->
+  <text x="138" y="396" font-family="'Space Grotesk', sans-serif" font-size="36" font-weight="700" fill="#EFEEEA">Full-Stack Developer · Mobile &amp; AI Engineer</text>
+
+  <line x1="138" y1="428" x2="1062" y2="428" stroke="#22303D" stroke-width="2"/>
+
+  <!-- tagline (explicit lines — SVG text does not wrap) -->
+  <text x="138" y="468" font-family="'Space Grotesk', sans-serif" font-size="24" fill="#93A7B4">I build fast, accessible, bilingual digital products —</text>
+  <text x="138" y="500" font-family="'Space Grotesk', sans-serif" font-size="24" fill="#93A7B4">from pixel to production.</text>
+
+  <!-- url -->
+  <text x="90" y="598" font-family="'JetBrains Mono', monospace" font-size="26">
+    &lt;tspan fill="#5E707E"&gt;https://&lt;/tspan&gt;&lt;tspan fill="#FE7743"&gt;amirho&lt;/tspan&gt;&lt;tspan fill="#5E707E"&gt;.github.io&lt;/tspan&gt;
+  </text>
+
+  <!-- brand strip (decorative only) -->
+  <rect x="0" y="616" width="1200" height="14" fill="url(#brand-strip)"/>
+</svg>

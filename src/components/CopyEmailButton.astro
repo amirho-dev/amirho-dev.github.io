@@ -1,0 +1,138 @@
+---
+import type { LocaleCode } from "../i18n/config";
+import { t } from "../i18n/utils";
+
+/**
+ * One-click "copy email" control with visible and screen-reader
+ * feedback. The email is passed in by the caller (the pages source it
+ * from src/config/site.ts as of Phase 5) so this component holds no
+ * data of its own.
+ */
+interface Props {
+  locale: LocaleCode;
+  email: string;
+  class?: string;
+}
+
+const { locale, email, class: className } = Astro.props;
+const dict = t(locale);
+---
+
+<button
+  type="button"
+  data-copy-email
+  data-email={email}
+  data-msg-copied={dict.common.copied}
+  data-label-default={dict.a11y.copyEmail}
+  aria-label={dict.a11y.copyEmail}
+  class:list={[
+    "group inline-flex min-h-11 items-center gap-3 rounded-lg border border-hairline bg-surface px-4 py-2 font-mono text-sm text-text transition-colors duration-200 hover:border-accent",
+    className,
+  ]}
+>
+  {/* The address is Latin in both locales — pinned LTR inside the pill. */}
+  <span dir="ltr" class="truncate">{email}</span>
+  <span
+    class="flex shrink-0 items-center text-muted transition-colors duration-200 group-hover:text-accent"
+    data-copy-icon
+    aria-hidden="true"
+  >
+    <!-- copy icon — the resting state -->
+    <svg
+      data-icon="copy"
+      class="size-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    </svg>
+    <!-- check icon — shown for the feedback window -->
+    <svg
+      data-icon="check"
+      class="hidden size-4 text-ok"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M20 6 9 17l-5-5"></path>
+    </svg>
+  </span>
+</button>
+
+<!-- polite live region announcing the copy result -->
+<span class="sr-only" role="status" aria-live="polite" data-copy-status></span>
+
+<script>
+  const FEEDBACK_MS = 2000;
+
+  /**
+   * Copies text via the async Clipboard API when available, falling back
+   * to a temporary off-screen textarea + execCommand for non-secure
+   * contexts and older browsers. Resolves false when both paths fail —
+   * the caller then simply leaves the UI in its resting state.
+   */
+  const copyToClipboard = async (text: string): Promise<boolean> => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch {
+      /* fall through to the legacy path */
+    }
+    try {
+      const area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.insetBlockStart = "-9999px";
+      document.body.appendChild(area);
+      area.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(area);
+      return ok;
+    } catch {
+      return false;
+    }
+  };
+
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-copy-email]")
+    .forEach((button) => {
+      const copyIcon = button.querySelector<SVGElement>(
+        'svg[data-icon="copy"]',
+      );
+      const checkIcon = button.querySelector<SVGElement>(
+        'svg[data-icon="check"]',
+      );
+      const status = document.querySelector<HTMLElement>("[data-copy-status]");
+      let timer: number | undefined;
+
+      button.addEventListener("click", async () => {
+        const email = button.dataset.email ?? "";
+        const copied = await copyToClipboard(email);
+        if (!copied || !copyIcon || !checkIcon) return;
+
+        copyIcon.classList.add("hidden");
+        checkIcon.classList.remove("hidden");
+        button.setAttribute("aria-label", button.dataset.msgCopied ?? "");
+        if (status) status.textContent = button.dataset.msgCopied ?? "";
+
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          copyIcon.classList.remove("hidden");
+          checkIcon.classList.add("hidden");
+          button.setAttribute("aria-label", button.dataset.labelDefault ?? "");
+          if (status) status.textContent = "";
+        }, FEEDBACK_MS);
+      });
+    });
+</script>

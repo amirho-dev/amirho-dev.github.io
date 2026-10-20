@@ -1,0 +1,624 @@
+/* ==========================================================================
+   AmirHo — Global Design System · Tailwind CSS v4 (CSS-first)
+   --------------------------------------------------------------------------
+   This is the ONLY file in the repository that contains raw color values.
+   Every component references the tokens defined here — never a hex code.
+
+   Structure
+     1  Custom variants      class-based dark / light strategy
+     2  Semantic tokens      :root (dark = default)
+                             html:not(.dark) (light)
+                             html[lang="fa"] (Farsi typography)
+     3  @theme mapping       tokens → Tailwind utilities
+     4  Base layer           element defaults, selection, scrollbar,
+                             focus-visible, Farsi guardrails,
+                             reduced-motion kill switch
+     5  Custom utilities     container-site · mono-label · bg-gradient-hi
+     6  Components layer     .prose (blog posts & case studies)
+
+   Locked decisions (documented per build brief §14):
+     · Dark is the DEFAULT state; the light palette activates when the
+       no-flash script (BaseLayout, Phase 3) removes `.dark` from <html>.
+       With JavaScript disabled the site stays dark — the intended default.
+     · --gradient-hi is identical in both themes, decorative only, and is
+       NEVER applied to text.
+     · Terminal windows and code blocks are dark in BOTH themes (§7.4).
+     · Radius scale = Tailwind v4 defaults: rounded-sm 4px · rounded-lg
+       8px · rounded-xl 12px — terminal aesthetics only.
+   ========================================================================== */
+
+@import "tailwindcss";
+
+/* Self-hosted fonts (Fontsource). Page-view budget (§6.2): EN loads
+   Space Grotesk + Inter Variable + JetBrains Mono (3 families);
+   FA loads Vazirmatn Variable + JetBrains Mono (2 families). Browsers
+   only download an @font-face file when rendered text actually uses it,
+   so declaring all families globally costs nothing on unused locales. */
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/vazirmatn";
+@import "@fontsource-variable/space-grotesk";
+@import "@fontsource-variable/jetbrains-mono";
+
+/* ── 1 · Theme variants (class strategy) ────────────────────────────── */
+/* `.dark` on <html> = dark theme (the default state). */
+@custom-variant dark (&:where(.dark, .dark *));
+/* Light theme = <html> without the `.dark` class. */
+@custom-variant light (&:where(:root:not(.dark), :root:not(.dark) *));
+
+/* ── 2 · Semantic tokens ─────────────────────────────────────────────── */
+
+/* 2a · Dark — the default palette (§6.1) */
+:root {
+  color-scheme: dark;
+
+  /* palette */
+  --bg: #000000;
+  --surface: #273f4f;
+  --surface-2: #334c5e;
+  --text: #efeeea;
+  --text-muted: color-mix(in srgb, #efeeea 60%, transparent);
+  --accent: #fe7743;
+  --accent-2: #fe7743;
+  --ok: #309898;
+  --danger: #cb0404;
+  --gradient-hi: linear-gradient(135deg, #ff9f00 0%, #f4631e 100%);
+
+  /* derived — hairlines, overlays, elevation */
+  --border: color-mix(in srgb, #efeeea 12%, transparent);
+  --border-strong: color-mix(in srgb, #efeeea 26%, transparent);
+  --scrim: color-mix(in srgb, #000000 70%, transparent);
+  --elev-card:
+    0 1px 0 0 color-mix(in srgb, #efeeea 5%, transparent) inset,
+    0 16px 48px -16px color-mix(in srgb, #000000 80%, transparent);
+
+  /* typography */
+  --ff-display: "Space Grotesk", "Vazirmatn Variable", system-ui, sans-serif;
+  --ff-body: "Inter Variable", "Vazirmatn Variable", system-ui, sans-serif;
+  --ff-mono:
+    "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+  --fw-display: 700;
+  --fw-display-strong: 700;
+  --lh-heading: 1.1;
+  --lh-body: 1.6;
+  --ls-display: -0.02em;
+
+  /* motion (§6.3 — micro interactions) */
+  --dur-fast: 150ms;
+  --dur-med: 250ms;
+
+  /* terminal windows — intentionally dark in BOTH themes (§7.4) */
+  --term-bg: #0c1219;
+  --term-header: #16212b;
+  --term-border: color-mix(in srgb, #efeeea 10%, transparent);
+  --term-dot-r: #ff5f57;
+  --term-dot-y: #febc2e;
+  --term-dot-g: #28c840;
+
+  /* terminal text — fixed values, NOT theme-swapped: windows are dark in
+     both themes (§7.4), so theme-aware text tokens would go dark-on-dark
+     in light mode. */
+  --term-text: #e8edf2;
+  --term-text-muted: #93a7b4;
+  --term-danger: #ff6b6b;
+
+  /* native scrollbar (Firefox; WebKit styled in the base layer) */
+  scrollbar-color: var(--surface-2) var(--bg);
+}
+
+/* 2b · Light — active whenever `.dark` is absent from <html> */
+html:not(.dark) {
+  color-scheme: light;
+
+  /* palette */
+  --bg: #faf8f3;
+  --surface: #ffffff;
+  --surface-2: #f1ede7;
+  --text: #273f4f;
+  --text-muted: color-mix(in srgb, #273f4f 70%, transparent);
+  --accent: #fe7743;
+  --accent-2: #309898;
+  --ok: #309898;
+  --danger: #cb0404;
+  --gradient-hi: linear-gradient(135deg, #ff9f00 0%, #f4631e 100%);
+
+  /* derived */
+  --border: color-mix(in srgb, #273f4f 14%, transparent);
+  --border-strong: color-mix(in srgb, #273f4f 30%, transparent);
+  --scrim: color-mix(in srgb, #273f4f 32%, transparent);
+  --elev-card:
+    0 1px 2px color-mix(in srgb, #273f4f 8%, transparent),
+    0 16px 40px -12px color-mix(in srgb, #273f4f 18%, transparent);
+
+  /* typography tokens (weights / line-heights / tracking) carry over
+     from :root — light mode only swaps paint. */
+}
+
+/* 2c · Farsi typography overrides — applied via <html lang="fa"> (§6.2) */
+html[lang="fa"] {
+  --ff-display: "Vazirmatn Variable", "Vazirmatn", system-ui, sans-serif;
+  --ff-body: "Vazirmatn Variable", "Vazirmatn", system-ui, sans-serif;
+  /* mono (JetBrains Mono) is untouched — code is Latin-only by design */
+  --fw-display: 700;
+  --fw-display-strong: 800;
+  --lh-heading: 1.35;
+  --lh-body: 1.85;
+  --ls-display: 0; /* never track the Arabic script */
+}
+
+/* ── 3 · Tailwind theme mapping (token → utility) ────────────────────── */
+@theme {
+  /* colors → bg-*, text-*, border-*, divide-*, …
+     Example utilities: bg-bg · bg-surface · bg-surface-2 · text-text ·
+     text-muted · text-accent · border-hairline · bg-term */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-ok: var(--ok);
+  --color-danger: var(--danger);
+  --color-hairline: var(--border);
+  --color-hairline-strong: var(--border-strong);
+  --color-term: var(--term-bg);
+  --color-term-header: var(--term-header);
+  --color-term-border: var(--term-border);
+  --color-term-dot-r: var(--term-dot-r);
+  --color-term-dot-y: var(--term-dot-y);
+  --color-term-dot-g: var(--term-dot-g);
+  --color-term-text: var(--term-text);
+  --color-term-muted: var(--term-text-muted);
+  --color-term-danger: var(--term-danger);
+
+  /* fonts → font-display · font-sans · font-mono (locale-aware via
+     html[lang="fa"] overrides above) */
+  --font-display: var(--ff-display);
+  --font-sans: var(--ff-body);
+  --font-mono: var(--ff-mono);
+
+  /* Fluid type scale (§6.2). text-base / text-lg are BODY sizes; text-xl
+     and up are DISPLAY sizes. Companion line-heights are locale-aware:
+     EN headings 1.1 / FA 1.35, EN body 1.6 / FA 1.85. */
+  --text-xs: 0.75rem; /* 12 — mono labels */
+  --text-sm: 0.875rem; /* 14 */
+  --text-base: 1rem; /* 16 */
+  --text-base--line-height: var(--lh-body);
+  --text-lg: 1.125rem; /* 18 — lead body */
+  --text-lg--line-height: var(--lh-body);
+  --text-xl: 1.25rem; /* 20 — display scale starts */
+  --text-xl--line-height: var(--lh-heading);
+  --text-2xl: clamp(1.375rem, 1.25rem + 0.5vw, 1.625rem);
+  --text-2xl--line-height: var(--lh-heading);
+  --text-3xl: clamp(1.625rem, 1.4rem + 1vw, 2.125rem);
+  --text-3xl--line-height: var(--lh-heading);
+  --text-4xl: clamp(1.875rem, 1.5rem + 1.75vw, 2.75rem);
+  --text-4xl--line-height: var(--lh-heading);
+  --text-5xl: clamp(2.125rem, 1.5rem + 3vw, 3.5rem);
+  --text-5xl--line-height: var(--lh-heading);
+  --text-6xl: clamp(2.375rem, 1.25rem + 5vw, 4.5rem);
+  --text-6xl--line-height: var(--lh-heading);
+  --text-7xl: clamp(2.75rem, 1rem + 7.5vw, 5.75rem);
+  --text-7xl--line-height: var(--lh-heading);
+
+  /* elevation + easing */
+  --shadow-card: var(--elev-card);
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* shared keyframe animations (GSAP owns scroll reveals; these are the
+     three perpetual CSS animations used across the site) */
+  --animate-marquee: marquee 42s linear infinite;
+  --animate-blink: blink 1.1s steps(2, start) infinite;
+  --animate-pulse-dot: pulse-dot 2.4s ease-out infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+  @keyframes pulse-dot {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 50%, transparent);
+    }
+    70%,
+    100% {
+      box-shadow: 0 0 0 10px transparent;
+    }
+  }
+}
+
+/* Marquee direction (§7.4) — RTL plays the mirrored keyframes.
+   Why not `animation-direction: reverse`: reverse replays the LTR
+   keyframes from −50% → 0, but an RTL track is anchored to the RIGHT
+   edge of its container, so negative offsets immediately uncover the
+   window's end side and the loop breaks with a visible gap. The
+   mirrored track instead slides 0 → +50%, which stays covered and
+   seamless for the full cycle while moving the reverse way. Unlayered
+   on purpose: unlayered rules outrank every cascade layer, so this
+   reliably overrides the utilities-layer `animation` shorthand. */
+@keyframes marquee-rtl {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(50%);
+  }
+}
+[dir="rtl"] .animate-marquee {
+  animation-name: marquee-rtl;
+}
+
+/* ── 4 · Base layer ──────────────────────────────────────────────────── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin; /* inherited by inner scroll regions (Firefox) */
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--ff-body);
+    font-size: 1rem;
+    line-height: var(--lh-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    min-height: 100dvh;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--ff-display);
+    line-height: var(--lh-heading);
+    letter-spacing: var(--ls-display);
+    text-wrap: balance;
+  }
+  h1,
+  h2 {
+    font-weight: var(--fw-display-strong);
+  }
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: var(--fw-display);
+  }
+
+  /* default heading scale — utilities (text-*) always win when applied */
+  h1 {
+    font-size: var(--text-5xl);
+  }
+  h2 {
+    font-size: var(--text-4xl);
+  }
+  h3 {
+    font-size: var(--text-3xl);
+  }
+  h4 {
+    font-size: var(--text-2xl);
+  }
+  h5 {
+    font-size: var(--text-xl);
+  }
+  h6 {
+    font-size: var(--text-lg);
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    text-underline-offset: 0.25em;
+  }
+
+  /* Code islands are Latin-only by design (§7.4) — force LTR so
+     identifiers, commands and terminal output read correctly even
+     inside RTL prose. Logical `start` under ltr resolves to left. */
+  code,
+  kbd,
+  samp {
+    font-family: var(--ff-mono);
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+  pre {
+    font-family: var(--ff-mono);
+    direction: ltr;
+    text-align: start;
+  }
+
+  /* anchored headings must clear the sticky header when deep-linked */
+  [id] {
+    scroll-margin-block: 6.5rem;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: #000000;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  /* scrollbars — WebKit (Firefox handled by scrollbar-color tokens) */
+  ::-webkit-scrollbar {
+    width: 0.625rem;
+    height: 0.625rem;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--surface-2);
+    border-radius: 9999px;
+    border: 2px solid var(--bg);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--accent);
+  }
+
+  /* Farsi guardrails (§6.2 / §7.4) — never letter-track or case-transform
+     the Arabic script, even if a utility slips onto a prose element.
+     code / kbd / samp / pre are exempt: they are Latin-only. */
+  html[lang="fa"]
+    :where(
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      p,
+      a,
+      button,
+      li,
+      dt,
+      dd,
+      label,
+      figcaption,
+      blockquote,
+      summary,
+      strong,
+      em,
+      small,
+      td,
+      th
+    ) {
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+
+  /* Marquee scrolls in reverse under RTL (§7.4) — the duplicated track
+     makes both directions seamless. */
+  /* [dir="rtl"] .animate-marquee {
+    animation-direction: reverse;
+  } */
+
+  /* Reduced-motion kill switch (§6.3). GSAP animations are guarded
+     separately in src/lib/reveal.ts (Phase 4). */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ── 5 · Custom utilities ─────────────────────────────────────────────── */
+
+/* Page shell — centered, fluid gutters. Used on every page. */
+@utility container-site {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 76rem; /* 1216px */
+  padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+/* Small mono eyebrow label — LATIN ONLY by design: it renders terminal
+   commands and tech names ($ ls ~/projects, NEXT.JS …). Never apply it
+   to Farsi copy — use text-sm + font-sans for translated labels. */
+@utility mono-label {
+  font-family: var(--ff-mono);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Decorative brand gradient — backgrounds and borders only, NEVER text
+   (§6.1). */
+@utility bg-gradient-hi {
+  background-image: var(--gradient-hi);
+}
+
+/* ── 6 · Components layer — prose (blog posts & case studies) ────────── */
+@layer components {
+  .prose {
+    font-size: 1.0625rem; /* 17px — long-form reading size */
+    line-height: var(--lh-body);
+    color: var(--text);
+    max-width: 72ch;
+  }
+
+  .prose > * + * {
+    margin-block-start: 1.25em;
+  }
+
+  .prose :where(h2, h3, h4, h5, h6) {
+    font-family: var(--ff-display);
+    line-height: var(--lh-heading);
+    letter-spacing: var(--ls-display);
+    margin-block: 2.25em 0.75em;
+    text-wrap: balance;
+  }
+  .prose :where(h2, h3, h4, h5, h6):first-child {
+    margin-block-start: 0;
+  }
+  .prose h2 {
+    font-size: var(--text-3xl);
+  }
+  .prose h3 {
+    font-size: var(--text-2xl);
+  }
+  .prose h4 {
+    font-size: var(--text-xl);
+  }
+  .prose h5,
+  .prose h6 {
+    font-size: var(--text-lg);
+  }
+
+  .prose :where(p, li) {
+    line-height: var(--lh-body);
+  }
+
+  .prose a {
+    color: var(--accent);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+    transition:
+      color var(--dur-fast) var(--ease-smooth),
+      text-decoration-thickness var(--dur-fast) var(--ease-smooth);
+  }
+  @media (hover: hover) {
+    .prose a:hover {
+      color: var(--accent-2);
+      text-decoration-thickness: 2px;
+    }
+  }
+
+  .prose :where(ul, ol) {
+    padding-inline-start: 1.5em;
+  }
+  .prose ul {
+    list-style: disc;
+  }
+  .prose ol {
+    list-style: decimal;
+  }
+  .prose li {
+    margin-block: 0.5em;
+  }
+  .prose li::marker {
+    color: var(--accent);
+  }
+
+  .prose blockquote {
+    border-inline-start: 3px solid var(--accent);
+    padding-inline-start: 1.25em;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+  /* Arabic script does not italicize — keep Farsi quotes upright. */
+  html[lang="fa"] .prose blockquote {
+    font-style: normal;
+  }
+
+  .prose :not(pre) > code {
+    font-family: var(--ff-mono);
+    font-size: 0.875em;
+    background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.125em 0.375em;
+    overflow-wrap: anywhere;
+  }
+
+  .prose pre {
+    background: var(--term-bg);
+    border: 1px solid var(--term-border);
+    border-radius: 12px;
+    padding: 1.125rem 1.25rem;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+  .prose pre code {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-size: inherit;
+    overflow-wrap: normal;
+  }
+
+  .prose :where(table) {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+  }
+  .prose :where(th, td) {
+    border: 1px solid var(--border);
+    padding: 0.5em 0.75em;
+    text-align: start;
+  }
+  .prose thead th {
+    background: color-mix(in srgb, var(--surface-2) 60%, transparent);
+  }
+
+  .prose hr {
+    border: 0;
+    border-block-start: 1px solid var(--border-strong);
+    margin-block: 3em;
+  }
+
+  .prose img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .prose figure {
+    margin-block: 2em;
+  }
+  .prose figcaption {
+    margin-block-start: 0.75em;
+    text-align: center;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+
+  .prose kbd {
+    font-size: 0.75em;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-block-end-width: 2px;
+    border-radius: 4px;
+    padding: 0.125em 0.375em;
+  }
+
+  .prose strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+}

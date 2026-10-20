@@ -1,0 +1,130 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SectionHeading from "../components/SectionHeading.astro";
+import TerminalWindow from "../components/TerminalWindow.astro";
+import type { TerminalConfig } from "../components/lab/Terminal";
+import { SITE } from "../config/site";
+import { SOCIALS } from "../data/socials";
+import { SKILL_GROUPS } from "../data/skills";
+import type { LocaleCode } from "../i18n/config";
+import { getLocalizedPath, t } from "../i18n/utils";
+
+/**
+ * Lab (EN) — the interactive terminal (§10.7).
+ *
+ *  · The page builds the TerminalConfig server-side from the
+ *    dictionaries + data modules + content collections (typed against
+ *    the engine's exported interface), then ships it to the client as
+ *    an inert JSON script the engine parses.
+ *  · The engine (components/lab/Terminal.ts) owns every behavior:
+ *    English commands, dictionary-driven localized output, ↑/↓ history,
+ *    aria-live log, blinking block cursor, Ctrl+L clear, `theme`
+ *    toggling via the site's real toggle, `sudo hire-me` → contact.
+ */
+const locale: LocaleCode = "en";
+const dict = t(locale);
+
+const projectEntries = (
+  await getCollection(
+    "projects",
+    ({ data }) => data.locale === locale && !data.draft,
+  )
+).sort((a, b) => b.data.year - a.data.year);
+
+const config: TerminalConfig = {
+  localeCode: locale,
+  strings: {
+    introLines: dict.lab.introLines,
+    helpHeader: dict.lab.helpHeader,
+    helpDescriptions: dict.lab.helpDescriptions,
+    whoamiOutput: dict.lab.whoamiOutput,
+    skillsIntro: dict.lab.skillsIntro,
+    projectsIntro: dict.lab.projectsIntro,
+    socialsIntro: dict.lab.socialsIntro,
+    contactIntro: dict.lab.contactIntro,
+    contactNote: dict.lab.contactNote,
+    unknownCommand: dict.lab.unknownCommand,
+    themeSwitched: dict.lab.themeSwitched,
+    sudoOutput: dict.lab.sudoOutput,
+    neofetch: dict.lab.neofetch,
+    themeDark: dict.theme.dark,
+    themeLight: dict.theme.light,
+    a11yTerminal: dict.a11y.terminal,
+    a11yOutput: dict.a11y.terminalOutput,
+    a11yInput: dict.a11y.terminalInput,
+  },
+  skills: SKILL_GROUPS.flatMap((group) => group.skills),
+  socials: SOCIALS.map(({ label, url, handle }) => ({ label, url, handle })),
+  email: SITE.email,
+  projects: projectEntries.map((entry) => ({
+    name: entry.data.title,
+    domain: entry.data.domain,
+    url: getLocalizedPath(
+      `/projects/${entry.id.split("/")[1] ?? entry.id}`,
+      locale,
+    ),
+  })),
+  sections: [
+    { label: dict.nav.home, path: getLocalizedPath("/", locale) },
+    { label: dict.nav.about, path: getLocalizedPath("/about", locale) },
+    { label: dict.nav.projects, path: getLocalizedPath("/projects", locale) },
+    { label: dict.nav.blog, path: getLocalizedPath("/blog", locale) },
+    { label: dict.nav.lab, path: getLocalizedPath("/lab", locale) },
+    { label: dict.nav.contact, path: getLocalizedPath("/contact", locale) },
+  ],
+  contactUrl: getLocalizedPath("/contact", locale),
+};
+---
+
+<BaseLayout
+  locale={locale}
+  title={dict.meta.lab.title}
+  description={dict.meta.lab.description}
+>
+  <section class="container-site py-16 md:py-24">
+    <SectionHeading
+      path="lab"
+      headingLevel={1}
+      title={dict.lab.title}
+      subtitle={dict.lab.subtitle}
+      class="mb-10 md:mb-14"
+    />
+
+    <div data-reveal="fade" class="mx-auto max-w-3xl">
+      <TerminalWindow title="amirho@lab — bash">
+        <div data-terminal></div>
+      </TerminalWindow>
+
+      <p class="mt-4 text-center text-sm text-muted">{dict.lab.hint}</p>
+      <p class="mt-1 text-center text-sm text-muted">{dict.lab.historyHint}</p>
+    </div>
+  </section>
+
+  <script
+    is:inline
+    type="application/json"
+    data-terminal-config
+    set:html={JSON.stringify(config).replace(/</g, "\\u003c")}
+  />
+</BaseLayout>
+
+<script>
+  import { Terminal, type TerminalConfig } from "../components/lab/Terminal";
+  import { initReveals } from "../lib/reveal";
+
+  initReveals();
+
+  const mount = document.querySelector<HTMLElement>("[data-terminal]");
+  const configEl = document.querySelector<HTMLScriptElement>(
+    "[data-terminal-config]",
+  );
+
+  if (mount && configEl?.textContent) {
+    try {
+      new Terminal(mount, JSON.parse(configEl.textContent) as TerminalConfig);
+    } catch {
+      /* malformed config — the page stays readable, the terminal stays inert */
+    }
+  }
+</script>

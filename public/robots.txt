@@ -1,0 +1,7 @@
+# amirho.github.io — bilingual portfolio of AmirHo
+# Both locales are canonical content and fully crawlable.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://amirho.github.io/sitemap-index.xml

@@ -1,0 +1,111 @@
+---
+title: "ParsLingo"
+description: "A Farsi-first, offline-first language-learning app that reached 10k downloads and a 4.6-star rating with zero server costs."
+role: "Solo developer — product design, React Native implementation, content pipeline and release management."
+domain: "mobile"
+stack:
+  - "React Native"
+  - "Expo"
+  - "TypeScript"
+  - "SQLite"
+  - "TTS"
+year: 2022
+image: "../../../assets/projects/parslingo.svg"
+heroAlt: "ParsLingo app screens showing a Farsi vocabulary lesson with audio playback and a multiple-choice exercise with correct-answer feedback."
+locale: "en"
+draft: false
+seo:
+  title: "ParsLingo Case Study — AmirHo | Offline Mobile Learning"
+  description: "How ParsLingo reached 10k downloads and a 4.6-star rating: a Farsi-first, offline-first React Native app with SQLite storage, on-device TTS and true RTL."
+---
+
+ParsLingo is a Farsi-first language-learning app I designed, built and shipped alone: a React Native application that teaches Farsi vocabulary and phrases with an offline-first architecture, on-device text-to-speech and a review system based on spaced repetition. It passed 10,000 downloads in its first year and settled at a 4.6-star rating — with no advertising budget, no server, and no backend to maintain.
+
+This case study is the story of why "offline-first" and "RTL-first" were not features I added, but constraints the entire architecture grew from.
+
+## Problem
+
+Farsi learners are poorly served by the apps that dominate the language-learning market, and the reasons compound each other.
+
+**Coverage is thin.** The major platforms either don't offer Farsi or treat it as a low-priority addition, with thin content and generic exercises that ignore how the language actually works — including its script, its letter-joining rules, and its numeral system.
+
+**Connectivity is assumed.** The apps that do offer Farsi assume a stable, fast connection. That assumption fails for two of the three groups who most want the app: learners inside Iran, where connectivity is unreliable and sanctions-related restrictions block common CDNs and Google Play billing, and the diaspora commuting on subways and airplanes.
+
+**RTL is an afterthought.** In the apps that bothered at all, right-to-left support was visibly bolted on: directional icons left un-mirrored, Persian numerals replaced with Latin digits mid-sentence, and exercise typography that broke letter joining. For a language written in the Arabic script, these are not cosmetic complaints — they make the learning material itself wrong.
+
+The target users I cared about were concrete: a heritage speaker in Toronto refreshing what childhood exposure left behind, a traveler preparing for a trip, and a spouse learning their partner's language. All three wanted the same thing the market wasn't giving them: a serious Farsi tutor that fits in a pocket and works when the network doesn't.
+
+## Process
+
+### Research before code
+
+I interviewed around twenty learners across the three personas before writing a line of the app. Three findings shaped everything:
+
+1. **Offline beat gamification.** Not one interviewee asked for leaderboards or streak fireworks; almost all of them described learning in dead zones — commutes, flights, patchy home internet. Whatever else the app did, it had to be fully functional without a connection.
+2. **Correct RTL beat feature count.** Learners with prior exposure to other apps described the exact broken behaviors above, unprompted. Trust in the app was built or destroyed by typography.
+3. **Audio was non-negotiable.** Pronunciation is the hardest part of Farsi for English speakers, and text-only learning was described as "guessing".
+
+### Content architecture
+
+I designed the content model before the screens: units contain lessons, lessons contain exercises, and every piece of learnable material is a **card** that flows through a spaced-repetition scheduler. Content is authored once in structured JSON — written by me, reviewed by native speakers — and compiled into a SQLite database that ships inside the app. This pipeline meant content work and code work could proceed in parallel, and it gave the app a single source of truth for what a lesson contains.
+
+### RTL-first from the first commit
+
+Instead of building LTR and "adding RTL", I built every screen with logical properties — `paddingStart`, `marginEnd`, `textAlign: 'start'` — and directional icons mirrored only where the icon's meaning was directional. Persian digits render in Persian contexts; Latin digits stay in technical contexts like version numbers. The layout system never learns whether it's rendering LTR or RTL; it simply doesn't need to know.
+
+## Solution
+
+The app is built with React Native and Expo, in strict TypeScript, and the architecture has one organizing principle: **the network is a content-delivery mechanism, never a runtime dependency**.
+
+The SQLite database ships as a bundled asset. On first launch it is copied into writable storage, and every subsequent content update arrives as a small diff bundle that the app applies transactionally — so a failed or interrupted update can never leave the database half-migrated. After that first launch, the app is complete: lessons, exercises, audio, scheduling, progress — all local.
+
+The review scheduler is a simplified SM-2-style algorithm that runs entirely on-device:
+
+```ts
+/**
+ * Schedules the next review for a card given the learner's answer
+ * quality (0–5, standard SM-2 scale). Runs fully offline.
+ */
+export function scheduleReview(
+  card: Card,
+  quality: AnswerQuality,
+  now: Date,
+): Card {
+  if (quality < 3) {
+    // Failed recall: repetition count resets, card returns soon.
+    return {
+      ...card,
+      repetitions: 0,
+      intervalDays: 0,
+      dueAt: addMinutes(now, 10),
+    };
+  }
+
+  const repetitions = card.repetitions + 1;
+  const intervalDays =
+    repetitions === 1
+      ? 1
+      : repetitions === 2
+        ? 3
+        : Math.round(card.intervalDays * easiness(card));
+  return {
+    ...card,
+    repetitions,
+    intervalDays,
+    dueAt: addDays(now, intervalDays),
+  };
+}
+
+function easiness(card: Card): number {
+  // Clamp between 1.3 and 2.5 — the classic SM-2 bounds.
+  return Math.min(2.5, Math.max(1.3, card.easeFactor));
+}
+```
+
+Because the scheduler is a pure function over an immutable `Card`, it is trivially testable and has no dependency on time zones, network calls, or device clocks beyond the `now` argument passed in.
+
+## Outcome
+
+ParsLingo passed 10,000 downloads in its first year, held a 4.6-star rating, and cost nothing to run — no servers, no CDN bills, no billing integration. The constraints that looked like handicaps turned out to be the product: an app that works on a Tehran metro with no signal, renders Farsi the way Farsi is actually written, and teaches pronunciation without ever phoning home.
+
+The wider lesson I took from it is that "offline-first" and "RTL-first" are not features you bolt onto an app after the fact. They are architectural decisions that have to be made before the first screen is written, because by the time you're adding them, you're not adding them — you're rewriting.

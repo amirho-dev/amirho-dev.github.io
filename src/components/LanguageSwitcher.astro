@@ -1,0 +1,86 @@
+---
+import { locales, localeConfigs, type LocaleCode } from "../i18n/config";
+import { getLocalizedPath, t } from "../i18n/utils";
+
+/**
+ * `EN | فارسی` switcher (§7.6).
+ *  · Navigates to the SAME page in the other locale.
+ *  · The current locale renders as a non-link (aria-current) — never a
+ *    self-referencing link; only the other locale is actionable.
+ *  · Persists the visitor's choice to localStorage, but the stored
+ *    value is NEVER used to redirect — every navigation is explicit.
+ *  · Used in both the desktop header and the mobile nav; ≥44px targets.
+ */
+interface Props {
+  /** Current page locale. */
+  locale: LocaleCode;
+  /** Extra classes for layout context (header / mobile nav). */
+  class?: string;
+}
+
+const { locale, class: className } = Astro.props;
+const dict = t(locale);
+const currentPath = Astro.url.pathname;
+
+const baseClasses =
+  "flex min-h-11 min-w-11 items-center justify-center rounded-lg border px-2.5 transition-colors duration-200";
+
+const optionClasses = (code: "en" | "fa", isCurrent: boolean): string[] => [
+  baseClasses,
+  isCurrent
+    ? "border-accent/50 bg-accent/10 text-accent"
+    : "border-hairline text-muted hover:border-hairline-strong hover:text-text",
+  code === "fa" ? "font-sans text-sm" : "font-mono text-xs tracking-widest",
+];
+---
+
+<nav
+  class:list={["flex items-center gap-1", className]}
+  aria-label={dict.a11y.languageOptions}
+>
+  {
+    locales.map((code) => {
+      const cfg = localeConfigs[code];
+      const isCurrent = code === locale;
+      return isCurrent ? (
+        <span
+          aria-current="true"
+          lang={code}
+          class:list={optionClasses(code, true)}
+        >
+          {cfg.switcherLabel}
+        </span>
+      ) : (
+        <a
+          href={getLocalizedPath(currentPath, code)}
+          hreflang={code}
+          lang={code}
+          data-locale-pref={code}
+          class:list={optionClasses(code, false)}
+        >
+          {cfg.switcherLabel}
+        </a>
+      );
+    })
+  }
+</nav>
+
+<script>
+  // Persist the visitor's explicit language choice (§7.6).
+  // Intentionally NEVER read back for redirects — the visitor decides
+  // on every navigation.
+  document
+    .querySelectorAll<HTMLAnchorElement>("[data-locale-pref]")
+    .forEach((link) => {
+      link.addEventListener("click", () => {
+        try {
+          localStorage.setItem(
+            "amirho:preferred-locale",
+            link.dataset.localePref ?? "en",
+          );
+        } catch {
+          /* storage unavailable (private mode) — the link still navigates */
+        }
+      });
+    });
+</script>

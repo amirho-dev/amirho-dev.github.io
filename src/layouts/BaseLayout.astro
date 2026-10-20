@@ -1,0 +1,163 @@
+---
+import "../styles/global.css";
+import { localeConfigs, type LocaleCode } from "../i18n/config";
+import { t } from "../i18n/utils";
+import { SITE } from "../config/site";
+import { SOCIALS } from "../data/socials";
+import SEO from "../components/SEO.astro";
+import JsonLd from "../components/JsonLd.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+
+/**
+ * The single page shell used by every route (directly or via
+ * ProjectLayout / BlogPostLayout).
+ *
+ *  · `lang` / `dir` come from the locale config (§7.2) — nothing is
+ *    hard-coded per page.
+ *  · The inline script in <head> applies the stored/system theme BEFORE
+ *    first paint (no flash). Dark is the markup default; the script can
+ *    only REMOVE the `.dark` class (see global.css §2b).
+ *  · Renders the site-wide JSON-LD (Person + WebSite, translated) and
+ *    merges any page-specific schema passed via `jsonLd`.
+ *  · `<slot name="head" />` lets nested layouts inject extra head tags
+ *    (used by Phase 10 for article metas).
+ *  · Cloudflare Web Analytics is rendered ONLY when a token is present
+ *    (§10.6) — absent token = no script tag at all.
+ *  · Identity data comes from the canonical sources: name/email from
+ *    src/config/site.ts, social channels from src/data/socials.ts.
+ */
+interface Props {
+  locale: LocaleCode;
+  /** Fully-localized page title (from the dictionaries' meta namespace). */
+  title: string;
+  /** Fully-localized meta description. */
+  description: string;
+  /** Open Graph type — 'article' on blog posts, 'website' elsewhere. */
+  ogType?: "website" | "article";
+  /** Extra page-specific JSON-LD (CreativeWork, Article…) merged after the site-wide schemas. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const { locale, title, description, ogType = "website", jsonLd } = Astro.props;
+
+const cfg = localeConfigs[locale];
+const dict = t(locale);
+// Normalized origin (no trailing slash) — keeps the schema @ids built
+// here byte-identical to the ones page layouts reference back to.
+const site = (Astro.site?.href ?? Astro.url.origin).replace(/\/+$/, "");
+
+const EMAIL = SITE.email;
+const SOCIAL_URLS = SOCIALS.map((social) => social.url);
+
+// Site-wide schema (§8): Person with translated knowsAbout/jobTitle,
+// WebSite with inLanguage — both stable @ids so page schemas can link back.
+const personSchema: Record<string, unknown> = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": `${site}/#person`,
+  name: SITE.name,
+  url: site,
+  email: `mailto:${EMAIL}`,
+  jobTitle: dict.hero.roles[0],
+  knowsAbout: dict.hero.roles,
+  sameAs: SOCIAL_URLS,
+  inLanguage: cfg.htmlLang,
+};
+
+const websiteSchema: Record<string, unknown> = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${site}/#website`,
+  name: SITE.name,
+  url: site,
+  description: dict.meta.home.description,
+  inLanguage: cfg.htmlLang,
+  publisher: { "@id": `${site}/#person` },
+};
+
+const schemas: Record<string, unknown>[] = [personSchema, websiteSchema];
+if (jsonLd) {
+  schemas.push(...(Array.isArray(jsonLd) ? jsonLd : [jsonLd]));
+}
+
+// Optional Cloudflare Web Analytics (§10.6): absent token → skipped entirely.
+const analyticsToken: string | undefined = import.meta.env
+  .PUBLIC_ANALYTICS_TOKEN;
+---
+
+<!doctype html>
+<html lang={cfg.htmlLang} dir={cfg.dir} class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <SEO
+      locale={locale}
+      title={title}
+      description={description}
+      ogType={ogType}
+    />
+    <JsonLd schema={schemas} />
+    <script is:inline>
+      // No-flash theme bootstrap (§6.4) — runs before first paint.
+      // Dark is the markup default; only a stored/system light choice
+      // removes the class. Storage failures keep the dark default.
+      (() => {
+        try {
+          const stored = localStorage.getItem("amirho:theme");
+          const theme =
+            stored === "light" || stored === "dark"
+              ? stored
+              : window.matchMedia("(prefers-color-scheme: light)").matches
+                ? "light"
+                : "dark";
+          document.documentElement.classList.toggle("dark", theme === "dark");
+        } catch {
+          /* storage unavailable — keep the dark default */
+        }
+        // Keep the browser chrome color in sync with the live --bg token
+        // (meta values cannot reference CSS variables, so this is set
+        // from computed style — no hex ever leaves global.css).
+        window.addEventListener("DOMContentLoaded", () => {
+          const bg = getComputedStyle(document.documentElement)
+            .getPropertyValue("--bg")
+            .trim();
+          if (!bg) return;
+          let meta = document.querySelector('meta[name="theme-color"]');
+          if (!meta) {
+            meta = document.createElement("meta");
+            meta.setAttribute("name", "theme-color");
+            document.head.appendChild(meta);
+          }
+          meta.setAttribute("content", bg);
+        });
+      })();
+    </script>
+    <slot name="head" />
+  </head>
+  <body class="flex min-h-dvh flex-col bg-bg font-sans text-text">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:start-4 focus:z-[70] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-black"
+    >
+      {dict.a11y.skipToContent}
+    </a>
+    <Header locale={locale} />
+    <main id="main" tabindex="-1" class="flex-1">
+      <slot />
+    </main>
+    <Footer locale={locale} />
+    {
+      analyticsToken && (
+        <script
+          is:inline
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: analyticsToken })}
+        />
+      )
+    }
+  </body>
+</html>

@@ -1,0 +1,19 @@
+---
+import type { LocaleCode } from "../../i18n/config";
+import { TECH_MARQUEE_ITEMS } from "../../data/skills";
+import TechMarquee from "../TechMarquee.astro";
+
+/**
+ * Home placement of the perpetual tech strip. The shared strip
+ * primitive (components/TechMarquee.astro) owns the rendering —
+ * RTL reversal, edge fade, sr-only list, reduced-motion freeze —
+ * while this wrapper binds it to the skills data from Phase 5.
+ */
+interface Props {
+  locale: LocaleCode;
+}
+
+const { locale } = Astro.props;
+---
+
+<TechMarquee locale={locale} items={TECH_MARQUEE_ITEMS} />

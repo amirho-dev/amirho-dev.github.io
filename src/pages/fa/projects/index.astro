@@ -1,0 +1,190 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import SectionHeading from "../../../components/SectionHeading.astro";
+import ProjectCard, {
+  type ProjectCardData,
+} from "../../../components/ProjectCard.astro";
+import { localeConfigs, type LocaleCode } from "../../../i18n/config";
+import { format, t } from "../../../i18n/utils";
+
+/**
+ * Projects index (FA mirror, §9) — same section components and filter
+ * system as the EN page, locale="fa", zero content drift.
+ */
+const locale: LocaleCode = "fa";
+const dict = t(locale);
+
+const entries = (
+  await getCollection(
+    "projects",
+    ({ data }) => data.locale === locale && !data.draft,
+  )
+).sort((a, b) => b.data.year - a.data.year);
+
+const projects: ProjectCardData[] = entries.map((entry) => ({
+  slug: entry.id.split("/")[1] ?? entry.id,
+  title: entry.data.title,
+  description: entry.data.description,
+  domain: entry.data.domain,
+  stack: entry.data.stack,
+  year: entry.data.year,
+  image: entry.data.image,
+  imageAlt: entry.data.heroAlt,
+}));
+
+const FILTERS = ["all", "web", "mobile", "ai"] as const;
+type Filter = (typeof FILTERS)[number];
+
+const filterAria: Record<Filter, string> = {
+  all: dict.projects.filterAll,
+  web: dict.projects.filterWeb,
+  mobile: dict.projects.filterMobile,
+  ai: dict.projects.filterAi,
+};
+
+const buttonBase =
+  "mono-label min-h-11 rounded-lg border px-4 py-2.5 transition-colors duration-200";
+const activeClasses = ["border-accent/60", "bg-accent/10", "text-accent"];
+const inactiveClasses = [
+  "border-hairline",
+  "text-muted",
+  "hover:border-hairline-strong",
+  "hover:text-text",
+];
+
+// Persian digits for the count (§7.5).
+const initialCount = new Intl.NumberFormat(
+  localeConfigs[locale].intlCode,
+).format(projects.length);
+---
+
+<BaseLayout
+  locale={locale}
+  title={dict.meta.projects.title}
+  description={dict.meta.projects.description}
+>
+  <section class="container-site py-16 md:py-24">
+    <SectionHeading
+      path="projects"
+      headingLevel={1}
+      title={dict.projects.title}
+      subtitle={dict.projects.subtitle}
+      class="mb-8 md:mb-10"
+    />
+
+    <div
+      class="flex flex-wrap items-center gap-2"
+      role="group"
+      aria-label={dict.projects.filterGroup}
+    >
+      {
+        FILTERS.map((filter) => (
+          <button
+            type="button"
+            data-filter-btn
+            data-filter={filter}
+            aria-pressed={filter === "all" ? "true" : "false"}
+            aria-label={`${filter.toUpperCase()} — ${filterAria[filter]}`}
+            class:list={[
+              buttonBase,
+              ...(filter === "all" ? activeClasses : inactiveClasses),
+            ]}
+          >
+            {filter}
+          </button>
+        ))
+      }
+    </div>
+
+    <p
+      role="status"
+      aria-live="polite"
+      class="mt-4 text-sm text-muted"
+      data-filter-count
+      data-template={dict.projects.resultsCount}
+      data-count-locale={localeConfigs[locale].intlCode}
+    >
+      {format(dict.projects.resultsCount, { count: initialCount })}
+    </p>
+
+    <div
+      data-reveal-group
+      class="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+    >
+      {
+        projects.map((project) => (
+          <div data-reveal-item data-filter-card data-domain={project.domain}>
+            <ProjectCard locale={locale} project={project} />
+          </div>
+        ))
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { initReveals } from "../../../lib/reveal";
+  import { ScrollTrigger } from "../../../lib/gsap";
+
+  initReveals();
+
+  const countEl = document.querySelector<HTMLElement>("[data-filter-count]");
+  const buttons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>("[data-filter-btn]"),
+  );
+  const cards = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-filter-card]"),
+  );
+
+  if (countEl && buttons.length > 0 && cards.length > 0) {
+    const template = countEl.dataset.template ?? "";
+    const countLocale = countEl.dataset.countLocale ?? "en-US";
+
+    const activeClasses = ["border-accent/60", "bg-accent/10", "text-accent"];
+    const inactiveClasses = [
+      "border-hairline",
+      "text-muted",
+      "hover:border-hairline-strong",
+      "hover:text-text",
+    ];
+
+    const renderCount = (visible: number): void => {
+      countEl.textContent = template.replace(
+        "{count}",
+        visible.toLocaleString(countLocale),
+      );
+    };
+
+    const applyFilter = (filter: string): void => {
+      buttons.forEach((button) => {
+        const isActive = button.dataset.filter === filter;
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+        if (isActive) {
+          button.classList.add(...activeClasses);
+          button.classList.remove(...inactiveClasses);
+        } else {
+          button.classList.remove(...activeClasses);
+          button.classList.add(...inactiveClasses);
+        }
+      });
+
+      let visible = 0;
+      cards.forEach((card) => {
+        const match = filter === "all" || card.dataset.domain === filter;
+        card.toggleAttribute("hidden", !match);
+        if (match) visible += 1;
+      });
+
+      renderCount(visible);
+      ScrollTrigger.refresh();
+    };
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const filter = button.dataset.filter;
+        if (filter) applyFilter(filter);
+      });
+    });
+  }
+</script>

@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="parslingo-title">
+  <title id="parslingo-title">ParsLingo — Farsi-first offline language-learning app mockup</title>
+  <defs>
+    <pattern id="parslingo-dots" width="40" height="40" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="2" fill="#1B2733"/>
+    </pattern>
+    <filter id="parslingo-shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="12" stdDeviation="20" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- canvas + dot grid -->
+  <rect width="1600" height="1000" fill="#0C1219"/>
+  <rect width="1600" height="1000" fill="url(#parslingo-dots)"/>
+
+  <!-- ── phone 1 · lesson screen (RTL app) ────────────────────── -->
+  <rect x="190" y="70" width="400" height="820" rx="52" fill="#16212B" stroke="#22303D" stroke-width="2"/>
+  <rect x="204" y="84" width="372" height="792" rx="42" fill="#0A0F16"/>
+  <rect x="330" y="90" width="120" height="6" rx="3" fill="#1B2733"/>
+
+  <!-- status bar -->
+  <text x="232" y="118" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13" fill="#93A7B4">9:41</text>
+  <g fill="#93A7B4">
+    <rect x="486" y="114" width="4" height="4"/>
+    <rect x="492" y="111" width="4" height="7"/>
+    <rect x="498" y="108" width="4" height="10"/>
+    <rect x="504" y="105" width="4" height="13"/>
+  </g>
+  <rect x="524" y="106" width="22" height="11" rx="3" fill="none" stroke="#93A7B4" stroke-width="1.5"/>
+  <rect x="526" y="108" width="13" height="7" fill="#93A7B4"/>
+
+  <!-- header: streak (left) · title · back chevron (right, RTL) -->
+  <rect x="228" y="146" width="76" height="32" rx="16" fill="#16212B" stroke="#22303D"/>
+  <path d="M246 154 c3 4 6 6 6 10 a6 6 0 1 1 -12 0 c0 -4 3 -6 6 -10 z" fill="#FE7743"/>
+  <text x="268" y="168" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13" font-weight="700" fill="#EFEEEA">12</text>
+  <text x="390" y="172" font-family="'Vazirmatn', 'Segoe UI', Tahoma, sans-serif" font-size="18" fill="#EFEEEA" text-anchor="middle" direction="rtl">درس چهارم</text>
+  <path d="M534 154 l12 12 -12 12" fill="none" stroke="#EFEEEA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- unit progress (fills from the start edge = right, RTL) -->
+  <text x="390" y="210" font-family="'Vazirmatn', 'Segoe UI', Tahoma, sans-serif" font-size="13" fill="#93A7B4" text-anchor="middle" direction="rtl">واحد ۴ · سلام و احوال‌پرسی</text>
+  <text x="222" y="230" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="11" fill="#93A7B4" text-anchor="end">60%</text>
+  <rect x="230" y="222" width="320" height="8" rx="4" fill="#1B2733"/>
+  <rect x="358" y="222" width="192" height="8" rx="4" fill="#FE7743"/>
+
+  <!-- word card -->
+  <rect x="246" y="258" width="288" height="300" rx="16" fill="#16212B" stroke="#22303D"/>
+  <circle cx="498" cy="292" r="18" fill="#FE7743" fill-opacity="0.14"/>
+  <path d="M490 287 h5 l6 -5 v16 l-6 -5 h-5 z" fill="#FE7743"/>
+  <path d="M504 289 a7 7 0 0 1 0 10" fill="none" stroke="#FE7743" stroke-width="2" stroke-linecap="round"/>
+  <text x="382" y="424" font-family="'Vazirmatn', 'Segoe UI', Tahoma, sans-serif" font-size="92" fill="#EFEEEA" text-anchor="middle" direction="rtl">سلام</text>
+  <text x="390" y="478" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="22" fill="#93A7B4" text-anchor="middle">salām</text>
+  <rect x="320" y="500" width="140" height="36" rx="18" fill="#309898" fill-opacity="0.14"/>
+  <text x="390" y="525" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="18" fill="#309898" text-anchor="middle">hello</text>
+
+  <!-- example sentence -->
+  <text x="390" y="596" font-family="'Vazirmatn', 'Segoe UI', Tahoma, sans-serif" font-size="22" fill="#EFEEEA" text-anchor="middle" direction="rtl">سلام، حال شما چطوره؟</text>
+  <text x="390" y="624" font-family="'Inter', 'Segoe UI', sans-serif" font-size="14" fill="#93A7B4" text-anchor="middle">Hello, how are you?</text>
+
+  <!-- continue CTA -->
+  <rect x="230" y="652" width="320" height="56" rx="28" fill="#FE7743"/>
+  <text x="390" y="688" font-family="'Vazirmatn', 'Segoe UI', Tahoma, sans-serif" font-size="20" font-weight="700" fill="#000000" text-anchor="middle" direction="rtl">ادامه</text>
+
+  <!-- bottom navigation -->
+  <line x1="222" y1="730" x2="558" y2="730" stroke="#1B2733"/>
+  <path d="M282 772 l8 -8 8 8 v9 h-16 z" fill="none" stroke="#93A7B4" stroke-width="1.8" stroke-linejoin="round"/>
+  <text x="290" y="808" font-family="'Vazirmatn', 'Segoe UI', Tahoma, sans-serif" font-size="11" fill="#93A7B4" text-anchor="middle" direction="rtl">خانه</text>
+  <rect x="378" y="758" width="24" height="18" rx="3" fill="none" stroke="#FE7743" stroke-width="1.8"/>
+  <line x1="390" y1="758" x2="390" y2="776" stroke="#FE7743" stroke-width="1.8"/>
+  <text x="390" y="808" font-family="'Vazirmatn', 'Segoe UI', Tahoma, sans-serif" font-size="11" fill="#FE7743" text-anchor="middle" direction="rtl">درس‌ها</text>
+  <circle cx="490" cy="762" r="5.5" fill="none" stroke="#93A7B4" stroke-width="1.8"/>
+  <path d="M481 780 a9 9 0 0 1 18 0" fill="none" stroke="#93A7B4" stroke-width="1.8"/>
+  <text x="490" y="808" font-family="'Vazirmatn', 'Segoe UI', Tahoma, sans-serif" font-size="11" fill="#93A7B4" text-anchor="middle" direction="rtl">پروفایل</text>
+  <rect x="340" y="844" width="100" height="5" rx="2.5" fill="#1B2733"/>
+
+  <!-- ── phone 2 · exercise screen ────────────────────────────── -->
+  <rect x="1010" y="170" width="400" height="820" rx="52" fill="#16212B" stroke="#22303D" stroke-width="2"/>
+  <rect x="1024" y="184" width="372" height="792" rx="42" fill="#0A0F16"/>
+  <rect x="1150" y="190" width="120" height="6" rx="3" fill="#1B2733"/>
+  <text x="1064" y="222" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13" fill="#93A7B4">9:41</text>
+
+  <!-- progress dots -->
+  <g>
+    <circle cx="1130" cy="252" r="6" fill="#FE7743"/>
+    <circle cx="1170" cy="252" r="6" fill="#FE7743"/>
+    <circle cx="1210" cy="252" r="6" fill="#FE7743"/>
+    <circle cx="1250" cy="252" r="6" fill="#1B2733"/>
+    <circle cx="1290" cy="252" r="6" fill="#1B2733"/>
+  </g>
+
+  <!-- question + word card -->
+  <text x="1210" y="312" font-family="'Vazirmatn', 'Segoe UI', Tahoma, sans-serif" font-size="24" fill="#EFEEEA" text-anchor="middle" direction="rtl">معنیِ «ممنون» چیست؟</text>
+  <rect x="1074" y="344" width="272" height="104" rx="14" fill="#16212B" stroke="#22303D"/>
+  <circle cx="1322" cy="372" r="16" fill="#FE7743" fill-opacity="0.14"/>
+  <path d="M1317 368 h4 l4 -3.5 v11 l-4 -3.5 h-4 z" fill="#FE7743"/>
+  <text x="1194" y="414" font-family="'Vazirmatn', 'Segoe UI', Tahoma, sans-serif" font-size="48" fill="#EFEEEA" text-anchor="middle" direction="rtl">ممنون</text>
+
+  <!-- answers (first = selected) -->
+  <rect x="1054" y="480" width="320" height="58" rx="12" fill="#309898" fill-opacity="0.12" stroke="#309898" stroke-width="2"/>
+  <text x="1180" y="516" font-family="'Inter', 'Segoe UI', sans-serif" font-size="18" fill="#EFEEEA">thank you</text>
+  <circle cx="1344" cy="509" r="12" fill="#309898"/>
+  <path d="M1338 509 l4 4 8 -8" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="1054" y="552" width="320" height="58" rx="12" fill="#16212B" stroke="#22303D"/>
+  <text x="1078" y="588" font-family="'Inter', 'Segoe UI', sans-serif" font-size="18" fill="#93A7B4">goodbye</text>
+
+  <rect x="1054" y="624" width="320" height="58" rx="12" fill="#16212B" stroke="#22303D"/>
+  <text x="1078" y="660" font-family="'Inter', 'Segoe UI', sans-serif" font-size="18" fill="#93A7B4">please</text>
+
+  <rect x="1054" y="696" width="320" height="58" rx="12" fill="#16212B" stroke="#22303D"/>
+  <text x="1078" y="732" font-family="'Inter', 'Segoe UI', sans-serif" font-size="18" fill="#93A7B4">sorry</text>
+
+  <!-- feedback bar -->
+  <rect x="1054" y="768" width="320" height="54" rx="12" fill="#309898" fill-opacity="0.14"/>
+  <circle cx="1082" cy="795" r="10" fill="#309898"/>
+  <path d="M1077 795 l3.5 3.5 7 -7" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="1216" y="802" font-family="'Vazirmatn', 'Segoe UI', Tahoma, sans-serif" font-size="18" fill="#309898" text-anchor="middle" direction="rtl">آفرین! درست بود</text>
+  <rect x="1160" y="944" width="100" height="5" rx="2.5" fill="#1B2733"/>
+
+  <!-- ── floating stat chips ──────────────────────────────────── -->
+  <rect x="640" y="258" width="212" height="52" rx="26" fill="#16212B" stroke="#22303D" filter="url(#parslingo-shadow)"/>
+  <path d="M668 272 v14 M661 279 l7 7 7 -7 M660 293 h16" fill="none" stroke="#FE7743" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="694" y="290" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="14" fill="#EFEEEA">10k+ downloads</text>
+
+  <rect x="676" y="468" width="188" height="52" rx="26" fill="#16212B" stroke="#22303D" filter="url(#parslingo-shadow)"/>
+  <path d="M702 486 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" fill="#FEBC2E"/>
+  <text x="724" y="500" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="14" fill="#EFEEEA">4.6 star rating</text>
+
+  <rect x="644" y="678" width="204" height="52" rx="26" fill="#16212B" stroke="#22303D" filter="url(#parslingo-shadow)"/>
+  <circle cx="668" cy="700" r="7" fill="#93A7B4"/>
+  <circle cx="678" cy="696" r="9" fill="#93A7B4"/>
+  <rect x="660" y="700" width="26" height="8" rx="4" fill="#93A7B4"/>
+  <line x1="658" y1="712" x2="686" y2="688" stroke="#FE7743" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="698" y="710" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="14" fill="#EFEEEA">100% offline</text>
+
+  <!-- tech tags -->
+  <rect x="650" y="812" width="86" height="34" rx="17" fill="none" stroke="#22303D"/>
+  <text x="693" y="834" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="12" fill="#93A7B4" text-anchor="middle">SQLite</text>
+  <rect x="748" y="812" width="150" height="34" rx="17" fill="none" stroke="#22303D"/>
+  <text x="823" y="834" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="12" fill="#93A7B4" text-anchor="middle">on-device TTS</text>
+  <rect x="910" y="812" width="70" height="34" rx="17" fill="none" stroke="#22303D"/>
+  <text x="945" y="834" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="12" fill="#93A7B4" text-anchor="middle">Expo</text>
+</svg>

@@ -1,0 +1,116 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import TagChip from "../../components/TagChip.astro";
+import { localeConfigs, type LocaleCode } from "../../i18n/config";
+import { formatDate, getLocalizedPath, t } from "../../i18n/utils";
+
+/**
+ * Blog index (EN) — every published post, newest first. Reading time is
+ * computed per post (~200 wpm, code fences excluded); dates render
+ * Gregorian for EN via formatDate.
+ */
+const locale: LocaleCode = "en";
+const dict = t(locale);
+const cfg = localeConfigs[locale];
+
+const entries = (
+  await getCollection(
+    "blog",
+    ({ data }) => data.locale === locale && !data.draft,
+  )
+).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const readingMinutes = (body: string): number => {
+  const words = body
+    .replace(/```[\s\S]*?```/g, " ")
+    .split(/\s+/)
+    .filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
+};
+const fmt = new Intl.NumberFormat(cfg.intlCode);
+---
+
+<BaseLayout
+  locale={locale}
+  title={dict.meta.blog.title}
+  description={dict.meta.blog.description}
+>
+  <section class="container-site py-16 md:py-24">
+    <SectionHeading
+      path="blog"
+      headingLevel={1}
+      title={dict.blog.title}
+      subtitle={dict.blog.subtitle}
+      class="mb-10 md:mb-14"
+    />
+
+    <div data-reveal-group class="grid gap-6 md:grid-cols-2">
+      {
+        entries.map((post) => {
+          const slug = post.id.split("/")[1] ?? post.id;
+          const minutes = fmt.format(readingMinutes(post.body ?? ""));
+          return (
+            <article data-reveal-item>
+              <a
+                href={getLocalizedPath(`/blog/${slug}`, locale)}
+                class="group flex h-full flex-col gap-3 rounded-xl border border-hairline bg-surface p-6 shadow-card transition-colors duration-200 hover:border-accent/60"
+              >
+                <p class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-muted">
+                  <time datetime={post.data.pubDate.toISOString()}>
+                    {formatDate(post.data.pubDate, locale)}
+                  </time>
+                  <span aria-hidden="true">·</span>
+                  <span>
+                    {minutes} {dict.common.minRead}
+                  </span>
+                </p>
+
+                <h2 class="font-display text-xl transition-colors duration-200 group-hover:text-accent">
+                  {post.data.title}
+                </h2>
+
+                <p class="flex-1 text-sm text-muted">{post.data.description}</p>
+
+                {post.data.tags.length > 0 && (
+                  <ul
+                    class="flex flex-wrap gap-1.5"
+                    aria-label={dict.blog.tags}
+                  >
+                    {post.data.tags.map((tag) => (
+                      <li>
+                        <TagChip label={tag} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <span class="inline-flex items-center gap-2 text-sm font-medium text-accent">
+                  {dict.common.readMore}
+                  <svg
+                    class="size-4 rtl:-scale-x-100"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 12h14m-6-6 6 6-6 6" />
+                  </svg>
+                </span>
+              </a>
+            </article>
+          );
+        })
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { initReveals } from "../../lib/reveal";
+  initReveals();
+</script>

@@ -1,0 +1,110 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import type { LocaleCode } from "../i18n/config";
+import { getLocalizedPath, t } from "../i18n/utils";
+import TagChip from "./TagChip.astro";
+
+/**
+ * Case-study card for project grids (home featured section + projects
+ * index). Deliberately presentational: pages own data fetching and
+ * choreography (reveal attributes live on wrappers, not in here), the
+ * card renders exactly the data it is given.
+ */
+export interface ProjectCardData {
+  slug: string;
+  title: string;
+  /** One-to-two sentence summary shown on the card. */
+  description: string;
+  domain: "web" | "mobile" | "ai";
+  stack: string[];
+  year: number;
+  /** SVG mockup metadata (astro:assets import of src/assets/projects/*). */
+  image: ImageMetadata;
+  /** Translated alt text for the mockup (frontmatter `heroAlt`). */
+  imageAlt: string;
+}
+
+interface Props {
+  locale: LocaleCode;
+  project: ProjectCardData;
+  /** Eager-load the image when the card sits above the fold. */
+  eager?: boolean;
+  class?: string;
+}
+
+const { locale, project, eager = false, class: className } = Astro.props;
+const dict = t(locale);
+const href = getLocalizedPath(`/projects/${project.slug}`, locale);
+---
+
+<article class:list={["group h-full", className]}>
+  <a
+    href={href}
+    class="flex h-full flex-col overflow-hidden rounded-xl border border-hairline bg-surface shadow-card transition-colors duration-200 hover:border-accent/60"
+  >
+    <div
+      class="relative aspect-[16/10] overflow-hidden border-b border-hairline"
+    >
+      <Image
+        src={project.image}
+        alt={project.imageAlt}
+        width={project.image.width}
+        height={project.image.height}
+        loading={eager ? "eager" : "lazy"}
+        decoding="async"
+        class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+      />
+      {
+        /* Solid accent pill + black mono text: the only accent-on-light
+          combination that passes contrast for 12px type in both themes. */
+      }
+      <span
+        class="absolute start-3 top-3 rounded-md bg-accent px-2 py-1 font-mono text-xs font-bold uppercase tracking-widest text-black"
+      >
+        {project.domain}
+      </span>
+    </div>
+
+    <div class="flex flex-1 flex-col gap-4 p-5">
+      <div class="flex items-baseline justify-between gap-3">
+        <h3 class="font-display text-xl">{project.title}</h3>
+        {/* Years are stats — Latin digits in both locales (§7.5). */}
+        <span class="shrink-0 font-mono text-xs text-muted" dir="ltr"
+          >{project.year}</span
+        >
+      </div>
+
+      <p class="flex-1 text-sm text-muted">{project.description}</p>
+
+      <ul class="flex flex-wrap gap-1.5">
+        {
+          project.stack.map((tech) => (
+            <li>
+              <TagChip label={tech} />
+            </li>
+          ))
+        }
+      </ul>
+
+      <span
+        class="mt-1 inline-flex items-center gap-2 text-sm font-medium text-accent"
+      >
+        {dict.projects.readCaseStudy}
+        {/* Directional arrow — mirrors under RTL (§7.4). */}
+        <svg
+          class="size-4 rtl:-scale-x-100"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M5 12h14m-6-6 6 6-6 6"></path>
+        </svg>
+      </span>
+    </div>
+  </a>
+</article>

@@ -1,0 +1,58 @@
+---
+import { getCollection } from "astro:content";
+import type { LocaleCode } from "../../i18n/config";
+import { getLocalizedPath, t } from "../../i18n/utils";
+import SectionHeading from "../SectionHeading.astro";
+import ProjectCard, { type ProjectCardData } from "../ProjectCard.astro";
+
+/**
+ * Featured case studies — all published projects for the locale,
+ * newest first. Cards are presentational (Phase 4); this section owns
+ * the data fetching and the group reveal choreography.
+ */
+interface Props {
+  locale: LocaleCode;
+}
+
+const { locale } = Astro.props;
+const dict = t(locale);
+
+const entries = (
+  await getCollection(
+    "projects",
+    ({ data }) => data.locale === locale && !data.draft,
+  )
+).sort((a, b) => b.data.year - a.data.year);
+
+const projects: ProjectCardData[] = entries.map((entry) => ({
+  slug: entry.id.split("/")[1] ?? entry.id,
+  title: entry.data.title,
+  description: entry.data.description,
+  domain: entry.data.domain,
+  stack: entry.data.stack,
+  year: entry.data.year,
+  image: entry.data.image,
+  imageAlt: entry.data.heroAlt,
+}));
+---
+
+<section id="featured" class="container-site py-16 md:py-24">
+  <SectionHeading
+    path="projects"
+    title={dict.home.featuredTitle}
+    link={{
+      href: getLocalizedPath("/projects", locale),
+      label: dict.home.featuredViewAll,
+    }}
+    class="mb-10 md:mb-14"
+  />
+  <div data-reveal-group class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    {
+      projects.map((project) => (
+        <div data-reveal-item>
+          <ProjectCard locale={locale} project={project} />
+        </div>
+      ))
+    }
+  </div>
+</section>

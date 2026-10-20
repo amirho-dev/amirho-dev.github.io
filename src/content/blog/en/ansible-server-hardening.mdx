@@ -1,0 +1,130 @@
+---
+title: "The Ansible Playbooks I Run on Every Linux Server"
+description: "The exact roles, tasks and workflow behind my server baselines — SSH key-only logins, UFW defaults, fail2ban jails, automatic security updates — and why I stopped writing shell scripts."
+pubDate: "2025-02-18"
+updated: "2025-03-02"
+tags:
+  - "ansible"
+  - "linux"
+  - "security"
+  - "devops"
+locale: "en"
+draft: false
+seo:
+  title: "Ansible Playbooks for Linux Hardening — AmirHo | DevOps"
+  description: "SSH hardening, UFW deny-by-default, fail2ban jails and unattended upgrades — the Ansible roles and the check-diff-staging workflow behind every server I run."
+---
+
+I've been running Linux servers since 2020, when the fleet was one repurposed desktop in a basement running a Debian homelab. Today the same discipline runs a fleet of thirty-plus hosts — web servers, database replicas, cache nodes, edge proxies. The fleet grew, but the first hour of every server's life stayed identical, because it's not administered by hand. It's declared in a repository.
+
+Every server I am responsible for gets the same baseline within an hour of existing: hardened SSH, a deny-by-default firewall, brute-force protection, and automatic security updates. This post is that baseline — the actual roles, the reasoning, and the workflow that keeps it honest.
+
+## Why playbooks beat scripts
+
+I used to do this with shell scripts, and shell scripts failed me in two specific ways.
+
+First, they encode _steps_, not _state_. A script that adds a line to `sshd_config` works the first time and duplicates the line the second time, or silently does nothing, depending on how defensively you wrote it. An Ansible task encodes the desired end state — run it once or fifty times, the result is identical.
+
+Second, scripts hide drift. Three months after the manual hotfix you half-remember, the server's config no longer matches the repository, and nothing tells you. Ansible's `--check --diff` mode is a drift detector: it shows you exactly what on the machine no longer matches the declaration, without changing anything.
+
+Hardening isn't an event you perform. It's a state you declare, and re-assert whenever you feel like it.
+
+## The repository
+
+The layout is deliberately boring:
+
+```text
+ansible/
+├── site.yml
+├── inventory/
+│   ├── production
+│   └── staging
+├── group_vars/
+│   └── all/vault.yml      # ansible-vault encrypted
+└── roles/
+    ├── common/
+    ├── ssh/
+    ├── firewall/
+    ├── fail2ban/
+    └── updates/
+```
+
+`site.yml` is a short list that binds roles to host groups. Inventory is split by environment so staging can never be hit by a production run, and every secret — the deploy key, the fail2ban notification webhook, the SSH port when I bother to move it — lives in a single Vault-encrypted file that no role reads directly. Roles read from `group_vars`; only the vault file knows the ciphertext.
+
+## The `common` role
+
+Every other role assumes the base layer is in place: timezone set, NTP running, a non-root user with an authorized key, a small package set for debugging. The `common` role is where those assumptions become enforced facts.
+
+The one non-obvious choice is that `common` runs first and _only once_ per boot, gated by a marker file. Reapplying the base layer on every run is cheap and idempotent, but on a fleet of thirty hosts the aggregate time adds up, and the marker file makes the cost explicit.
+
+## The `ssh` role
+
+This is the role that most often saves my day, because the alternative — a mis-typed `sshd_config` edit that locks me out of a remote host — is the kind of mistake you make exactly once.
+
+The role does four things:
+
+1. Deploys a known-good `sshd_config` from a template, not by editing lines in place. Templates are diffable, reviewable, and never accumulate drift.
+2. Enforces `PasswordAuthentication no`, `PermitRootLogin no`, and a restricted `AllowUsers` list.
+3. Validates the config with `sshd -t` **before** restarting the service, so a broken template fails the play instead of locking everyone out.
+4. Restarts `sshd` only when the config actually changed, using a handler.
+
+The validate-before-restart step is the entire reason I trust this role in production. Ansible makes it a one-liner:
+
+```yaml
+- name: Validate sshd configuration
+  ansible.builtin.command: sshd -t -f /etc/ssh/sshd_config
+  changed_when: false
+  register: sshd_validate
+  failed_when: sshd_validate.rc != 0
+
+- name: Restart sshd
+  ansible.builtin.service:
+    name: sshd
+    state: restarted
+  notify: restart sshd
+  when: sshd_validate.rc == 0
+```
+
+The `changed_when: false` on the validation task is deliberate: running `sshd -t` never changes anything, and marking it `changed` would pollute every subsequent `--check` run.
+
+## The `firewall` role
+
+UFW, deny-by-default, with an explicit allow list driven from `group_vars`. The role is small enough to read in a minute, and that's the point: a firewall you can't reason about in one sitting is a firewall you'll disable under pressure.
+
+The default policy is `deny incoming` and `allow outgoing`, and every port that opens is a named variable with a comment. When a service needs a new port opened, the diff in the merge request is one line, and the reviewer knows exactly what to look for.
+
+There is one escape hatch: `ufw allow from <office-ip> to any port 22`. It's not a rule the fleet runs with day-to-day, but it exists in `group_vars/staging` for the days when something has gone very wrong and I need a second way in.
+
+## The `fail2ban` role
+
+Fail2ban watches the auth log and bans IPs that fail authentication more than a set number of times in a window. The role ships two jails: one for `sshd`, one for `nginx`'s `auth.log` equivalent. Both are tuned conservatively — a ban duration of an hour, a maxretry of five, a findtime of ten minutes — because the goal is to raise the cost of a brute-force attempt, not to build a permanent blocklist.
+
+The one file the role does **not** ship is the notification webhook. That lives in the vault, so the same role can be applied to every host without the value of the webhook being readable in the repository.
+
+## The `updates` role
+
+Unattended security updates, enabled and audited. Two decisions worth naming:
+
+- **Security updates are automatic; everything else is not.** A kernel update that requires a reboot is exactly the kind of change that should be a deliberate action, not a 3 a.m. surprise. The role installs `unattended-upgrades`, configures it to only apply from the security origin, and leaves reboots to a human.
+- **The reboot itself is announced, not enforced.** A weekly `needrestart` run reports which services are running old libraries, and the on-call human decides when to act on it. Silent automatic reboots are how a well-intentioned role turns into an incident.
+
+## The workflow
+
+Every change to any role goes through the same path:
+
+1. **`--check --diff` on staging.** The play runs in check mode against staging hosts and prints a diff of every file it would change. If the diff is surprising, the play is wrong, not the server.
+2. **Apply to staging.** Run for real, watch the handlers, verify the service.
+3. **Apply to one production host.** Never the whole fleet at once. One host, verify, then the rest.
+4. **Apply to the fleet.** Only after one production host has run clean for an hour.
+
+This is boring. It's supposed to be. The value of Ansible isn't that it can apply a hundred changes at once — it's that you can apply one change a hundred times and get the same result, and that when something goes wrong you can see exactly what the machine looked like before and after.
+
+## What I don't use it for
+
+Two things stay outside Ansible in my fleet, deliberately.
+
+**Application deployment.** Ansible is excellent at "this server should look like this". It's mediocre at "this specific commit of this specific app should be running with this environment." That's what CI/CD pipelines and container registries are for, and mixing the two makes both harder to reason about.
+
+**Secrets management beyond vault.** Ansible Vault is fine for the small set of long-lived credentials a role needs. It is not a secret store. Anything with rotation requirements, audit requirements, or more than one consumer lives in a dedicated secret manager, and Ansible reads it at run time.
+
+The line is: Ansible declares the _shape_ of a host. It does not orchestrate the _work_ the host performs. Keeping that boundary sharp is what has let the same five roles survive the fleet growing from one basement desktop to thirty-plus production hosts.

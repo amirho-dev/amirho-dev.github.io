@@ -1,0 +1,89 @@
+---
+title: "SysWatch"
+description: "An AI-assisted monitoring layer that reads 30+ Linux servers' logs and cuts mean time to repair by 45% for about $18 a month."
+role: "Solo engineer — agent development, hub API, LLM integration and fleet-wide rollout."
+domain: "ai"
+stack:
+  - "Python"
+  - "FastAPI"
+  - "systemd"
+  - "Redis"
+  - "LLM"
+year: 2024
+image: "../../../assets/projects/syswatch.svg"
+heroAlt: "SysWatch terminal view with live journalctl tail, a host health grid and an AI incident summary card recommending a rollback."
+locale: "en"
+draft: false
+seo:
+  title: "SysWatch Case Study — AmirHo | AI Server Monitoring"
+  description: "SysWatch: Python systemd agents, a FastAPI hub and a budget-capped LLM that summarizes log anomalies — cutting MTTR by 45% across 30+ Linux servers."
+---
+
+SysWatch is an AI-assisted monitoring layer I built for a Linux fleet of more than thirty servers — web hosts, database replicas, cache nodes and edge proxies. It does what conventional monitoring fundamentally cannot: read the logs, correlate what it finds, and tell the on-call human _what is going on_ instead of _that something is wrong_. Over ninety days it cut mean time to repair from 52 minutes to 29 — a 45% reduction — while spending about eighteen dollars a month on LLM inference.
+
+## Problem
+
+The fleet had good classical monitoring — metrics, thresholds, alerts — and it was drowning people anyway. Three failures, all structural:
+
+1. **Alert fatigue by volume.** Hundreds of alerts per day, of which roughly two in five were actionable. Flapping thresholds, duplicates per host, and a CPU spike that was Tuesday, not an incident. On-call learned to treat the alert channel as noise, which is the failure mode that actually kills.
+2. **Correlation was human work.** When something broke, fifteen alerts fired across four hosts within two minutes. A human then read logs on each host to reconstruct the story: which alert was the cause, which were symptoms, where it started. That reconstruction was the single largest chunk of a 52-minute mean time to repair.
+3. **The logs nobody read.** The most information-rich signal in the fleet — journald, service logs, nginx error logs — was effectively write-only. Searched after failures, never monitored, because no human can read 30 hosts' logs in real time.
+
+The gap was precise: monitoring answered "is something wrong?" with machine speed. Nothing answered "what is going on?" with anything better than a tired human reading logs at 3 a.m.
+
+## Process
+
+### Auditing the noise first
+
+Before any AI touched anything, I spent two weeks classifying every alert the fleet produced: flapping, threshold, duplicate, or genuine. That audit set two concrete targets — the −68% noise reduction I intended to hit through deduplication and correlation windows, and a labeled corpus of what "genuine" actually looked like on this fleet.
+
+### Deciding what the LLM would and would not do
+
+This was the most consequential design decision, so I made it early and made it explicit. **The LLM never takes actions.** It summarizes, correlates and suggests; a human clicks the button. Its output is treated as a well-read junior operator's read of the situation — genuinely useful, occasionally confidently wrong, never trusted unsupervised.
+
+Two hard guardrails followed. Determinism: temperature 0, fixed prompts, no conversation history — the same logs must produce the same summary, or the output can't be trusted during an incident review. Cost: a hard monthly budget with a per-incident token cap, because "an LLM reads every log line on 30 hosts" is a bill, not an architecture.
+
+### Building the eval set before the prompts
+
+I extracted 60 historical incidents with known root causes from the fleet's post-mortems, and tuned the summarizer against that set before it saw production traffic. This is the step most LLM projects skip and most LLM projects regret skipping. It converted "the summaries seem good" into a measurable accuracy figure — and it caught three prompt designs that looked fine in demos and hallucinated timelines on real data.
+
+## Solution
+
+The system has three layers: per-host agents, a central hub, and the summarizer.
+
+**Agents** are small Python programs deployed as systemd services on every host. They tail journald, sample `/proc`, and read structured logs from nginx and PostgreSQL, shipping a normalized event stream to the hub. Running them as systemd units gives exactly what a monitoring agent needs: automatic restart, dependency ordering, cgroup resource limits, and log capture in the very journal they monitor.
+
+```ini
+# /etc/systemd/system/syswatch-agent.service
+[Unit]
+Description=SysWatch fleet monitoring agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/opt/syswatch/venv/bin/python -m syswatch.agent
+Restart=always
+RestartSec=5
+# The agent must never threaten the host it monitors.
+CPUQuota=10%
+MemoryMax=128M
+Nice=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+The `CPUQuota` and `MemoryMax` lines are not decoration. A monitoring agent that can starve the host it monitors is a liability during exactly the incident it exists to catch, so the cgroup limits are a correctness requirement, not a tuning parameter.
+
+**The hub** is a FastAPI service backed by Redis and PostgreSQL. It receives the agents' event streams, maintains per-host health state, and runs the correlation window: events from multiple hosts inside a rolling 120-second window are grouped into a single candidate incident with a shared timeline, which is what collapses the fifteen-alerts problem into one. Redis handles the live state and the dedup keys; PostgreSQL stores incidents, acknowledged alerts, and the token-usage ledger that enforces the monthly budget cap.
+
+**The summarizer** is the only component that talks to an LLM. When an incident crosses the correlation threshold, the hub assembles a bounded context — recent journal lines per host, the correlation window, service states, and the last few related incidents — and sends it at temperature 0 with a fixed system prompt. The response is a structured object, not free text: a one-line situation, a suspected cause with a confidence band, the evidence lines that support it, and suggested next steps. Structured output is what makes the summary diffable, loggable and comparable across incidents.
+
+The prompt itself is versioned in the repo and referenced by hash in every incident record, so any summary can be traced back to the exact prompt that produced it. When accuracy regressed on the 60-incident eval set after a prompt change, the hash made the culprit obvious instead of arguable.
+
+## Outcome
+
+Over ninety days across more than thirty hosts, mean time to repair fell from 52 minutes to 29 — a 45% reduction — and the alert channel went from hundreds of messages a day to a few dozen correlated incidents, of which most were genuinely actionable. The LLM inference bill came in at roughly eighteen dollars a month, inside the hard cap and never once exceeded, because the budget guardrail rejected the summarization rather than the invoice.
+
+The lesson I keep coming back to is that the value here was not the model. It was the two weeks spent classifying alerts, the 60 labeled incidents built before the first prompt, and the decision to keep the LLM strictly on the reading side of the line — summarizing and suggesting, never acting. An LLM in an incident loop is only as useful as the ground truth you built to evaluate it, and only as trustworthy as the actions you refuse to let it take.

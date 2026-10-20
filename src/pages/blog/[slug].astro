@@ -1,0 +1,51 @@
+---
+import { getCollection, render } from "astro:content";
+import BlogPostLayout from "../../layouts/BlogPostLayout.astro";
+import type { LocaleCode } from "../../i18n/config";
+
+/**
+ * Blog post (EN). The slug is the pairing key shared with the FA mirror
+ * (§7.7). TOC comes from render()'s headings — Astro's own ids, so
+ * anchors always match.
+ */
+const locale: LocaleCode = "en";
+
+export async function getStaticPaths() {
+  const entries = await getCollection(
+    "blog",
+    ({ data }) => data.locale === "en" && !data.draft,
+  );
+  return entries.map((entry) => ({
+    params: { slug: entry.id.split("/")[1] ?? entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+
+// Chronological walk (ascending pubDate):
+// "previous" = the older post, "next" = the newer one.
+const timeline = (
+  await getCollection("blog", ({ data }) => data.locale === "en" && !data.draft)
+).sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf());
+const index = timeline.findIndex((candidate) => candidate.id === entry.id);
+const prev = index > 0 ? timeline[index - 1] : undefined;
+const next =
+  index >= 0 && index < timeline.length - 1 ? timeline[index + 1] : undefined;
+---
+
+<BlogPostLayout
+  entry={entry}
+  locale={locale}
+  headings={headings}
+  prev={prev}
+  next={next}
+>
+  <Content />
+</BlogPostLayout>
+
+<script>
+  import { initReveals } from "../../lib/reveal";
+  initReveals();
+</script>

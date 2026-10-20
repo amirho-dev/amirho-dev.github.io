@@ -1,0 +1,82 @@
+---
+title: "Prompting vs Fine-Tuning: What I Tell Every Client"
+description: "Fine-tuning is the answer to a question most clients aren't actually asking. The decision ladder I walk every client up — prompt, then RAG, then (rarely) fine-tuning — with the money math."
+pubDate: "2025-03-10"
+tags:
+  - "llm"
+  - "ai"
+  - "prompting"
+  - "fine-tuning"
+locale: "en"
+draft: false
+seo:
+  title: "Prompting vs Fine-Tuning, Honestly — AmirHo | AI Engineering"
+  description: "When to prompt, when to retrieve, when to fine-tune — the decision ladder, the cost math and the eval-set discipline I give every client before they spend a single training dollar."
+---
+
+Every AI project I've taken on since 2023 has arrived, sooner or later, at the same question. The client leans in, lowers their voice like they're about to order something expensive, and asks: "should we fine-tune a model on our data?"
+
+Nine times out of ten, the honest answer is no. But "no" is useless on its own — what earns its fee is explaining _why_, showing the ladder that gets tried first, and being able to say precisely when the expensive rung is worth it. This is that conversation, written down.
+
+## The instinct, and where it comes from
+
+Fine-tuning _feels_ like the serious option. Prompting feels like a hack you'll outgrow; training feels like the industrial-strength thing real companies do.
+
+The instinct is inherited from classical machine learning, where "train on your data" was genuinely the only path to customization — the model knew nothing until you taught it. Large language models inverted that bargain. The general capability is already in the weights; what you add at the margins is context and instructions. Most clients asking for fine-tuning are reaching for a scalpel when the situation calls for a well-written sticky note.
+
+## What fine-tuning actually changes
+
+This is the crux, so I'll say it plainly: **fine-tuning adjusts behavior and format, not knowledge.**
+
+A fine-tuned model will not reliably know your product documentation. What it _will_ do is reliably answer in the shape you trained it to answer in — the tone, the schema, the structure, every single time. Facts injected through training data are frozen at training time, unversioned, and strangely confident at the edges where the training data ran thin.
+
+If the requirement is "the model needs to know our stuff", the correct tool is retrieval, not gradients. If the requirement is "the model needs to _always_ answer like this", fine-tuning enters the conversation.
+
+## The ladder, in order
+
+### Step 1 — Prompt engineering (hours)
+
+A startling fraction of "we need fine-tuning" problems die right here: a clearer system prompt, explicit constraints, three well-chosen few-shot examples, structured output. Cost: an afternoon. Rollback: instantaneous. Every rung above this one should have to _prove_ this one failed.
+
+### Step 2 — Retrieval-augmented generation (days)
+
+When the gap is knowledge — your docs, your policies, your catalog — you chunk the material, embed it, retrieve what's relevant at query time, and hand it to the model with the question.
+
+Two properties make RAG the default for "domain expert" requirements: it's _fresh_ (swap the index when the docs change — no retraining) and it's _auditable_ (you can show the model its sources, which turns arguments about hallucination into inspections of a retrieval list).
+
+### Step 3 — Fine-tuning (weeks) — the earned rung
+
+Fine-tuning is legitimate when the first two rungs measurably fail, and that shows up in four specific shapes:
+
+- **Format lock-in at volume.** You need the identical output structure thousands of times a day, and the prompt tokens required to enforce it are dominating your bill.
+- **Latency.** Shorter prompts mean faster responses; at interactive scale, hundreds of tokens of instructions per call are a tax on every millisecond.
+- **Style.** A voice that few-shot examples can hold for a paragraph but not for a forty-page document.
+- **Small models for narrow tasks.** Distilling one well-defined task into a cheap, fast model that beats a large one _on that task_ — often the strongest engineering case of the four.
+
+## The money math
+
+Numbers make this concrete. A support-ticket classifier, 200,000 requests per day, small-model pricing on the order of fifteen cents per million input tokens:
+
+- **Prompted**: ~600 tokens per request (persona, rules, examples, ticket) → ~$18/day → ~$540/month.
+- **Fine-tuned**: ~80 tokens per request (the model _is_ the instructions) → ~$2.40/day → ~$72/month.
+
+At that volume, fine-tuning saves roughly $470 a month — real money, and it can fund its own upkeep: dataset curation, re-training when the vendor deprecates a base model, and the eval suite that keeps it honest.
+
+Now run the same math at 2,000 requests per day: $5.40 versus $0.72. The ~$140/month saving will not pay for a single week of that upkeep. The decision isn't "fine-tuning: yes or no" — it's "fine-tuning: at what volume does it clear its own maintenance cost", and that threshold is higher than most clients expect.
+
+## The part nobody budgets: evaluation
+
+Every fine-tune I've shipped started the same way this site's log-summarizer did: with sixty historical incidents and known root causes, assembled into an eval set _before_ a single prompt was tuned. If you can't measure the model's accuracy on your task, you can't tune it — you can only vibe-check it and ship your feelings.
+
+Prompting you can A/B casually, in an afternoon, in production. Fine-tuning without an eval set is expensive guessing with a deployment pipeline. Any proposal that arrives without an evaluation plan is, in my book, a red flag regardless of who signed it.
+
+## What I actually say
+
+By now the client conversation compresses to four lines:
+
+- New **fact** the model needs? → RAG.
+- New **behavior** you want? → Prompt.
+- Consistent shape at volume, latency, or style that survives few-shot? → Fine-tune — after the eval set exists.
+- And always: model vendors deprecate versions. Your fine-tune is a maintenance liability that re-bills every deprecation cycle; your prompt ports to the next model in an afternoon.
+
+Fine-tuning isn't the senior option, the serious option, or the option that proves you meant it. It's a specialization tool that earns its complexity exactly when the boring options measurably fail. Start with the boring thing. Measure. Escalate with evidence — and only then order the expensive thing off the menu.

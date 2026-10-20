@@ -1,0 +1,31 @@
+---
+title: "Building a Bilingual Astro Portfolio: RTL Without Tears"
+description: The system behind this site — Astro i18n routing, CSS logical properties, locale-aware fonts, RTL-safe GSAP and compile-time dictionary parity.
+pubDate: 2025-01-14
+tags:
+  - astro
+  - i18n
+  - rtl
+  - css
+locale: en
+draft: false
+seo:
+  title: Bilingual Astro & RTL Without Tears — AmirHo | Guide
+  description: How this site ships English and Farsi from one codebase — i18n routing, logical CSS, Vazirmatn font swaps, RTL-safe GSAP animations and typed dictionaries.
+---
+
+I maintain this site in two languages because I work in two languages: English for the international half of my clients, Farsi for the other half. And every few months, someone launches a bilingual project and asks me the same question a month later: "the RTL version was supposed to be the easy part — what happened?"
+
+What happened is almost always the same thing: right-to-left support was treated as a checklist item bolted onto the end of the project, instead of an architectural decision made at the start. This post is the system behind the site you're reading — a bilingual Astro build where the Farsi version is not a translated copy of the English version, but the _same site_, rendered in a different direction.
+
+## One route table, two addresses
+
+Astro's native i18n routing does the structural work. The whole configuration is four lines:
+
+```js
+i18n: {
+  defaultLocale: 'en',
+  locales: ['en', 'fa'],
+  routing: { prefixDefaultLocale: false },
+},
+```

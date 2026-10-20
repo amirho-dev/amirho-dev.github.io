@@ -1,0 +1,46 @@
+---
+import type { SkillLevel } from "../data/skills";
+import TagChip from "./TagChip.astro";
+
+/**
+ * One tier of the honest skills matrix (§10.5). The tier styling encodes
+ * the honesty: daily = accent rail, comfortable = plain hairline,
+ * exploring = dashed border. Tech names are Latin chips (never
+ * localized, §7.4); the group label and hint arrive pre-translated
+ * from the page.
+ */
+interface Props {
+  level: SkillLevel;
+  /** Localized tier label (e.g. "Daily" / «روزانه»). */
+  label: string;
+  /** Localized tier hint sentence. */
+  hint: string;
+  /** Latin tech names in display order. */
+  skills: string[];
+}
+
+const { level, label, hint, skills } = Astro.props;
+
+// Exclusive full border sets — no overlapping color utilities.
+const tierStyles: Record<SkillLevel, string> = {
+  daily: "border border-accent/40",
+  comfortable: "border border-hairline",
+  exploring: "border border-dashed border-hairline-strong",
+};
+---
+
+<article
+  class:list={["rounded-xl bg-surface p-6 shadow-card", tierStyles[level]]}
+>
+  <h3 class="font-display text-xl">{label}</h3>
+  <p class="mt-1 text-sm text-muted">{hint}</p>
+  <ul class="mt-5 flex flex-wrap gap-2">
+    {
+      skills.map((skill) => (
+        <li>
+          <TagChip label={skill} />
+        </li>
+      ))
+    }
+  </ul>
+</article>

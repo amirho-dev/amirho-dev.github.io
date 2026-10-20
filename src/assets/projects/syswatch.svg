@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="syswatch-title">
+  <title id="syswatch-title">SysWatch — AI-assisted Linux server monitoring mockup</title>
+
+  <!-- canvas + terminal frame -->
+  <rect width="1600" height="1000" fill="#0C1219"/>
+  <rect x="36" y="36" width="1528" height="928" rx="14" fill="#0C1219" stroke="#22303D" stroke-width="1.5"/>
+
+  <!-- terminal header -->
+  <rect x="36" y="36" width="1528" height="54" rx="14" fill="#16212B"/>
+  <rect x="36" y="64" width="1528" height="26" fill="#16212B"/>
+  <line x1="36" y1="90" x2="1564" y2="90" stroke="#22303D"/>
+  <circle cx="66" cy="63" r="6" fill="#FF5F57"/>
+  <circle cx="90" cy="63" r="6" fill="#FEBC2E"/>
+  <circle cx="114" cy="63" r="6" fill="#28C840"/>
+  <text x="140" y="70" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="16" fill="#93A7B4">syswatch — journalctl -f · 30 hosts · 03:14 UTC</text>
+  <rect x="1396" y="49" width="136" height="28" rx="14" fill="#309898" fill-opacity="0.14"/>
+  <text x="1464" y="68" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13" fill="#309898" text-anchor="middle">3 ANOMALIES</text>
+
+  <!-- ── left · error rate sparkline ──────────────────────────── -->
+  <rect x="68" y="116" width="368" height="232" rx="12" fill="#16212B" stroke="#22303D"/>
+  <text x="92" y="148" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13" fill="#93A7B4">ERROR RATE — 24H</text>
+  <line x1="92" y1="252" x2="412" y2="252" stroke="#FEBC2E" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.5"/>
+  <text x="412" y="244" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10" fill="#FEBC2E" text-anchor="end">threshold</text>
+  <polyline points="92,292 124,289 156,293 188,287 220,291 252,286 284,290 316,283 348,196 380,236 412,262" fill="none" stroke="#93A7B4" stroke-width="2.5" stroke-linejoin="round"/>
+  <circle cx="348" cy="196" r="5" fill="#FF5F57"/>
+
+  <!-- ── left · host health grid ──────────────────────────────── -->
+  <rect x="68" y="372" width="368" height="288" rx="12" fill="#16212B" stroke="#22303D"/>
+  <text x="92" y="404" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13" fill="#93A7B4">HOST HEALTH — 30 HOSTS</text>
+  <g fill="#309898" fill-opacity="0.3">
+    <rect x="92" y="424" width="32" height="32" rx="4"/><rect x="134" y="424" width="32" height="32" rx="4"/><rect x="176" y="424" width="32" height="32" rx="4"/><rect x="218" y="424" width="32" height="32" rx="4"/><rect x="260" y="424" width="32" height="32" rx="4"/><rect x="302" y="424" width="32" height="32" rx="4"/>
+    <rect x="92" y="466" width="32" height="32" rx="4"/><rect x="134" y="466" width="32" height="32" rx="4"/><rect x="176" y="466" width="32" height="32" rx="4"/><rect x="218" y="466" width="32" height="32" rx="4"/><rect x="260" y="466" width="32" height="32" rx="4"/><rect x="302" y="466" width="32" height="32" rx="4"/>
+    <rect x="92" y="508" width="32" height="32" rx="4"/><rect x="176" y="508" width="32" height="32" rx="4"/><rect x="218" y="508" width="32" height="32" rx="4"/><rect x="260" y="508" width="32" height="32" rx="4"/><rect x="302" y="508" width="32" height="32" rx="4"/>
+    <rect x="92" y="550" width="32" height="32" rx="4"/><rect x="134" y="550" width="32" height="32" rx="4"/><rect x="176" y="550" width="32" height="32" rx="4"/><rect x="218" y="550" width="32" height="32" rx="4"/><rect x="260" y="550" width="32" height="32" rx="4"/><rect x="302" y="550" width="32" height="32" rx="4"/>
+    <rect x="92" y="592" width="32" height="32" rx="4"/><rect x="134" y="592" width="32" height="32" rx="4"/><rect x="176" y="592" width="32" height="32" rx="4"/><rect x="218" y="592" width="32" height="32" rx="4"/><rect x="260" y="592" width="32" height="32" rx="4"/><rect x="302" y="592" width="32" height="32" rx="4"/>
+  </g>
+  <!-- degraded + incident hosts -->
+  <rect x="302" y="466" width="32" height="32" rx="4" fill="#FEBC2E" fill-opacity="0.75"/>
+  <rect x="134" y="508" width="32" height="32" rx="4" fill="#FEBC2E" fill-opacity="0.75"/>
+  <rect x="218" y="424" width="32" height="32" rx="4" fill="#FF5F57"/>
+  <!-- legend -->
+  <rect x="92" y="648" width="14" height="14" rx="3" fill="#309898" fill-opacity="0.3"/>
+  <text x="112" y="659" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="11" fill="#93A7B4">healthy</text>
+  <rect x="180" y="648" width="14" height="14" rx="3" fill="#FEBC2E" fill-opacity="0.75"/>
+  <text x="200" y="659" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="11" fill="#93A7B4">degraded</text>
+  <rect x="268" y="648" width="14" height="14" rx="3" fill="#FF5F57"/>
+  <text x="288" y="659" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="11" fill="#93A7B4">web-07 · incident</text>
+
+  <!-- ── left · fleet impact stats ────────────────────────────── -->
+  <rect x="68" y="688" width="368" height="202" rx="12" fill="#16212B" stroke="#22303D"/>
+  <text x="92" y="720" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13" fill="#93A7B4">FLEET IMPACT — 90 DAYS</text>
+  <g font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13">
+    <text x="92" y="756" fill="#93A7B4">MTTR</text>
+    <text x="412" y="756" fill="#EFEEEA" font-weight="700" text-anchor="end">52m → 29m  (−45%)</text>
+    <text x="92" y="794" fill="#93A7B4">alert noise</text>
+    <text x="412" y="794" fill="#EFEEEA" font-weight="700" text-anchor="end">−68%</text>
+    <text x="92" y="832" fill="#93A7B4">llm spend</text>
+    <text x="412" y="832" fill="#EFEEEA" font-weight="700" text-anchor="end">~$18 / month</text>
+    <text x="92" y="870" fill="#93A7B4">fleet</text>
+    <text x="412" y="870" fill="#EFEEEA" font-weight="700" text-anchor="end">30+ hosts</text>
+  </g>
+
+  <!-- ── center · live log tail ────────────────────────────────── -->
+  <rect x="468" y="116" width="628" height="774" rx="12" fill="#0E141C" stroke="#22303D"/>
+  <circle cx="496" cy="143" r="4" fill="#309898"/>
+  <text x="508" y="148" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13" fill="#93A7B4">live tail — filtering: all hosts</text>
+
+  <!-- correlation bracket over the web-07 cluster -->
+  <rect x="1082" y="164" width="4" height="446" rx="2" fill="#FE7743" fill-opacity="0.85"/>
+
+  <g font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13">
+    <!-- highlighted ERROR rows -->
+    <rect x="478" y="164" width="610" height="25" rx="6" fill="#FF5F57" fill-opacity="0.08"/>
+    <rect x="478" y="164" width="3" height="25" fill="#FF5F57"/>
+    <rect x="478" y="263" width="610" height="25" rx="6" fill="#FF5F57" fill-opacity="0.08"/>
+    <rect x="478" y="263" width="3" height="25" fill="#FF5F57"/>
+    <rect x="478" y="428" width="610" height="25" rx="6" fill="#FF5F57" fill-opacity="0.08"/>
+    <rect x="478" y="428" width="3" height="25" fill="#FF5F57"/>
+    <rect x="478" y="560" width="610" height="25" rx="6" fill="#FF5F57" fill-opacity="0.08"/>
+    <rect x="478" y="560" width="3" height="25" fill="#FF5F57"/>
+
+    <text x="492" y="182" fill="#93A7B4">03:14:02</text><text x="584" y="182" fill="#FE7743">[web-07]</text><text x="676" y="182" fill="#FF5F57">ERROR</text><text x="736" y="182" fill="#E8EDF2">nginx: upstream timed out (110) — read hdr</text>
+    <text x="492" y="215" fill="#93A7B4">03:14:00</text><text x="584" y="215" fill="#FE7743">[web-07]</text><text x="676" y="215" fill="#FEBC2E">WARN</text><text x="736" y="215" fill="#E8EDF2">5xx rate 4.2% (threshold 1.0%)</text>
+    <text x="492" y="248" fill="#93A7B4">03:13:58</text><text x="584" y="248" fill="#93A7B4">[db-02]</text><text x="676" y="248" fill="#93A7B4">INFO</text><text x="736" y="248" fill="#E8EDF2">postgres checkpoint complete (12.4s)</text>
+    <text x="492" y="281" fill="#93A7B4">03:13:51</text><text x="584" y="281" fill="#FE7743">[web-07]</text><text x="676" y="281" fill="#FF5F57">ERROR</text><text x="736" y="281" fill="#E8EDF2">nginx: upstream timed out (110) — read hdr</text>
+    <text x="492" y="314" fill="#93A7B4">03:13:44</text><text x="584" y="314" fill="#93A7B4">[api-01]</text><text x="676" y="314" fill="#93A7B4">INFO</text><text x="736" y="314" fill="#E8EDF2">deploy #4821 rolled out — 3/3 healthy</text>
+    <text x="492" y="347" fill="#93A7B4">03:13:40</text><text x="584" y="347" fill="#FE7743">[web-07]</text><text x="676" y="347" fill="#FEBC2E">WARN</text><text x="736" y="347" fill="#E8EDF2">memory 87% — oom_score adjusted</text>
+    <text x="492" y="380" fill="#93A7B4">03:13:37</text><text x="584" y="380" fill="#FE7743">[web-07]</text><text x="676" y="380" fill="#FEBC2E">WARN</text><text x="736" y="380" fill="#E8EDF2">php-fpm: 96/100 children busy</text>
+    <text x="492" y="413" fill="#93A7B4">03:13:33</text><text x="584" y="413" fill="#93A7B4">[api-01]</text><text x="676" y="413" fill="#93A7B4">INFO</text><text x="736" y="413" fill="#E8EDF2">healthcheck ok — 200 in 34ms</text>
+    <text x="492" y="446" fill="#93A7B4">03:13:29</text><text x="584" y="446" fill="#FE7743">[web-07]</text><text x="676" y="446" fill="#FF5F57">ERROR</text><text x="736" y="446" fill="#E8EDF2">nginx: upstream timed out (110) — read hdr</text>
+    <text x="492" y="479" fill="#93A7B4">03:13:25</text><text x="584" y="479" fill="#93A7B4">[db-02]</text><text x="676" y="479" fill="#93A7B4">INFO</text><text x="736" y="479" fill="#E8EDF2">autovacuum: web.orders (2.1 GB)</text>
+    <text x="492" y="512" fill="#93A7B4">03:13:21</text><text x="584" y="512" fill="#FE7743">[web-07]</text><text x="676" y="512" fill="#FEBC2E">WARN</text><text x="736" y="512" fill="#E8EDF2">5xx rate 2.8% (threshold 1.0%)</text>
+    <text x="492" y="545" fill="#93A7B4">03:13:18</text><text x="584" y="545" fill="#93A7B4">[cache-01]</text><text x="676" y="545" fill="#93A7B4">INFO</text><text x="736" y="545" fill="#E8EDF2">redis: 412 MB used — 94% hits</text>
+    <text x="492" y="578" fill="#93A7B4">03:13:15</text><text x="584" y="578" fill="#FE7743">[web-07]</text><text x="676" y="578" fill="#FF5F57">ERROR</text><text x="736" y="578" fill="#E8EDF2">nginx: upstream timed out (110) — read hdr</text>
+    <text x="492" y="611" fill="#93A7B4">03:13:11</text><text x="584" y="611" fill="#93A7B4">[api-01]</text><text x="676" y="611" fill="#93A7B4">INFO</text><text x="736" y="611" fill="#E8EDF2">deploy #4821 starting — v2.14.0</text>
+    <text x="492" y="644" fill="#93A7B4">03:13:08</text><text x="584" y="644" fill="#93A7B4">[web-03]</text><text x="676" y="644" fill="#93A7B4">INFO</text><text x="736" y="644" fill="#E8EDF2">certbot: renewed 3 certs</text>
+    <text x="492" y="677" fill="#93A7B4">03:13:02</text><text x="584" y="677" fill="#FE7743">[web-07]</text><text x="676" y="677" fill="#93A7B4">INFO</text><text x="736" y="677" fill="#E8EDF2">backup done — 1.2 GB offsite</text>
+    <text x="492" y="710" fill="#93A7B4">03:12:58</text><text x="584" y="710" fill="#93A7B4">[db-02]</text><text x="676" y="710" fill="#93A7B4">INFO</text><text x="736" y="710" fill="#E8EDF2">replication lag 0.4s</text>
+    <text x="492" y="743" fill="#93A7B4">03:12:51</text><text x="584" y="743" fill="#FE7743">[web-07]</text><text x="676" y="743" fill="#FEBC2E">WARN</text><text x="736" y="743" fill="#E8EDF2">memory 81% (threshold 85%)</text>
+    <text x="492" y="776" fill="#93A7B4">03:12:47</text><text x="584" y="776" fill="#93A7B4">[edge-01]</text><text x="676" y="776" fill="#93A7B4">INFO</text><text x="736" y="776" fill="#E8EDF2">nginx: config reloaded — 0 errors</text>
+    <text x="492" y="809" fill="#93A7B4">03:12:44</text><text x="584" y="809" fill="#FE7743">[web-07]</text><text x="676" y="809" fill="#93A7B4">INFO</text><text x="736" y="809" fill="#E8EDF2">traffic baseline: 340 rps</text>
+    <text x="492" y="842" fill="#93A7B4">03:12:41</text><text x="584" y="842" fill="#93A7B4">[api-01]</text><text x="676" y="842" fill="#93A7B4">INFO</text><text x="736" y="842" fill="#E8EDF2">deploy #4821 queued by pipeline</text>
+  </g>
+
+  <!-- ── right · LLM incident summary ─────────────────────────── -->
+  <rect x="1128" y="116" width="404" height="774" rx="12" fill="#16212B" stroke="#FE7743" stroke-opacity="0.45"/>
+  <rect x="1152" y="140" width="46" height="28" rx="8" fill="#FE7743"/>
+  <text x="1175" y="160" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="14" font-weight="700" fill="#000000" text-anchor="middle">AI</text>
+  <text x="1210" y="160" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="14" fill="#EFEEEA">INCIDENT SUMMARY — web-07</text>
+  <line x1="1152" y1="186" x2="1508" y2="186" stroke="#22303D"/>
+
+  <g font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13" fill="#E8EDF2">
+    <text x="1152" y="216">3 correlated anomalies on web-07 since</text>
+    <text x="1152" y="238">03:12 UTC: upstream timeouts, 5xx spike</text>
+    <text x="1152" y="260">(4.2%) and php-fpm pool saturation.</text>
+    <text x="1152" y="282">Onset ~2 min after deploy #4821 (v2.14.0).</text>
+  </g>
+
+  <text x="1152" y="330" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="12" fill="#93A7B4">ROOT-CAUSE HINT</text>
+  <g font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13" fill="#E8EDF2">
+    <text x="1152" y="354">Pattern matches connection-pool</text>
+    <text x="1152" y="376">exhaustion under the new image.</text>
+  </g>
+
+  <text x="1152" y="430" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="12" fill="#93A7B4">RECOMMENDED ACTIONS</text>
+  <rect x="1152" y="448" width="190" height="36" rx="10" fill="#FE7743" fill-opacity="0.15"/>
+  <text x="1247" y="471" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13" fill="#FE7743" text-anchor="middle">rollback deploy #4821</text>
+  <rect x="1152" y="496" width="190" height="36" rx="10" fill="none" stroke="#22303D"/>
+  <text x="1247" y="519" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13" fill="#E8EDF2" text-anchor="middle">check pm.max_children</text>
+  <rect x="1152" y="544" width="110" height="36" rx="10" fill="none" stroke="#22303D"/>
+  <text x="1207" y="567" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13" fill="#93A7B4" text-anchor="middle">mute 1h</text>
+
+  <text x="1152" y="618" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="12" fill="#93A7B4">EVIDENCE</text>
+  <g font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13">
+    <text x="1152" y="642" fill="#FE7743">▸</text><text x="1170" y="642" fill="#93A7B4">03:14:02 — upstream timeouts ×4</text>
+    <text x="1152" y="664" fill="#FE7743">▸</text><text x="1170" y="664" fill="#93A7B4">03:13:37 — pool at 96/100 children</text>
+    <text x="1152" y="686" fill="#FE7743">▸</text><text x="1170" y="686" fill="#93A7B4">03:13:11 — deploy #4821 (v2.14.0)</text>
+  </g>
+
+  <line x1="1152" y1="716" x2="1508" y2="716" stroke="#22303D"/>
+  <text x="1152" y="744" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="12" fill="#93A7B4">CONFIDENCE</text>
+  <text x="1508" y="744" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="13" fill="#EFEEEA" text-anchor="end">0.87</text>
+  <rect x="1152" y="756" width="356" height="8" rx="4" fill="#1B2733"/>
+  <rect x="1152" y="756" width="310" height="8" rx="4" fill="#309898"/>
+
+  <text x="1152" y="850" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="11" fill="#93A7B4" opacity="0.7">summarized in 1.9s · est. $0.004 · temp 0</text>
+  <circle cx="1156" cy="880" r="4" fill="#309898"/>
+  <text x="1168" y="884" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="11" fill="#309898">monitoring — 30/30 agents reporting</text>
+</svg>

@@ -1,0 +1,106 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import ContactForm from "../../components/ContactForm.astro";
+import CopyEmailButton from "../../components/CopyEmailButton.astro";
+import AvailabilityBadge from "../../components/AvailabilityBadge.astro";
+import { SITE } from "../../config/site";
+import { SOCIALS } from "../../data/socials";
+import type { LocaleCode } from "../../i18n/config";
+import { t } from "../../i18n/utils";
+
+// FA mirror (§9): same layout, same components, locale="fa".
+const locale: LocaleCode = "fa";
+const dict = t(locale);
+const isFa = locale === "fa";
+const labelClass = isFa ? "text-sm text-muted" : "mono-label text-muted";
+---
+
+<BaseLayout
+  locale={locale}
+  title={dict.meta.contact.title}
+  description={dict.meta.contact.description}
+>
+  <section class="container-site py-16 md:py-24">
+    <SectionHeading
+      path="contact"
+      headingLevel={1}
+      title={dict.contact.title}
+      subtitle={dict.contact.subtitle}
+      class="mb-10 md:mb-14"
+    />
+
+    <div
+      class="grid items-start gap-10 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]"
+    >
+      <div data-reveal="up">
+        <ContactForm locale={locale} />
+      </div>
+
+      <aside data-reveal-group class="flex flex-col gap-6">
+        <div
+          data-reveal-item
+          class="rounded-xl border border-hairline bg-surface p-6 shadow-card"
+        >
+          <h2 class:list={["mb-4", labelClass]}>{dict.contact.emailHeading}</h2>
+          <CopyEmailButton
+            locale={locale}
+            email={SITE.email}
+            class="w-full justify-between"
+          />
+          <p class="mt-3 text-xs text-muted">{dict.contact.responseTime}</p>
+        </div>
+
+        <div data-reveal-item>
+          <AvailabilityBadge locale={locale} />
+        </div>
+
+        <div
+          data-reveal-item
+          class="rounded-xl border border-hairline bg-surface p-6 shadow-card"
+        >
+          <h2 class:list={["mb-4", labelClass]}>{dict.common.elsewhere}</h2>
+          <ul class="flex flex-col gap-1" aria-label={dict.a11y.socialLinks}>
+            {
+              SOCIALS.map((social) => (
+                <li>
+                  <a
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="group flex min-h-11 items-center gap-3 rounded-lg px-2 text-sm text-muted transition-colors duration-200 hover:text-text"
+                  >
+                    <svg
+                      class="size-5 text-muted transition-colors duration-200 group-hover:text-accent"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <Fragment set:html={social.icon} />
+                    </svg>
+                    <span>{social.label}</span>
+                    <span
+                      class="ms-auto font-mono text-xs text-muted"
+                      dir="ltr"
+                    >
+                      {social.handle}
+                    </span>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { initReveals } from "../../lib/reveal";
+  initReveals();
+</script>

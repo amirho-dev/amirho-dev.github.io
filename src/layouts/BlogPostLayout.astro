@@ -1,0 +1,275 @@
+---
+import type { CollectionEntry } from "astro:content";
+import type { MarkdownHeading } from "astro";
+import BaseLayout from "./BaseLayout.astro";
+import { localeConfigs, type LocaleCode } from "../i18n/config";
+import { formatDate, t } from "../i18n/utils";
+import LocalizedLink from "../components/LocalizedLink.astro";
+import TagChip from "../components/TagChip.astro";
+
+/**
+ * Blog post template (§11 Phase 10):
+ *  · terminal-flavored back link + `$ cat ~/blog/{slug}.mdx` eyebrow
+ *  · h1 + lead, meta row (published / updated / reading time), tag chips
+ *  · desktop TOC sidebar fed from the REAL rendered headings (the page
+ *    passes `render()`'s output — slugs always match Astro's own
+ *    heading ids, including Farsi ones, because both come from the
+ *    same pipeline)
+ *  · .prose body — Farsi line-heights come free: the Phase 1 prose
+ *    layer measures --lh-body, which is 1.85 under html[lang="fa"]
+ *  · chronological prev/next walk
+ *  · Article JSON-LD (translated, dated, linked to the site @ids) plus
+ *    og:article metas via BaseLayout's head slot
+ *
+ * Reading time: ~200 wpm over the prose, code fences excluded from
+ * the count; Persian digits under fa via Intl.
+ */
+interface Props {
+  entry: CollectionEntry<"blog">;
+  locale: LocaleCode;
+  /** Headings from render() — the ground truth for the TOC. */
+  headings: MarkdownHeading[];
+  /** Older post on the ascending-pubDate walk (start side). */
+  prev?: CollectionEntry<"blog">;
+  /** Newer post on the ascending-pubDate walk (end side). */
+  next?: CollectionEntry<"blog">;
+}
+
+const { entry, locale, headings, prev, next } = Astro.props;
+
+const cfg = localeConfigs[locale];
+const dict = t(locale);
+const isFa = locale === "fa";
+
+const site = (Astro.site?.href ?? Astro.url.origin).replace(/\/+$/, "");
+const url = new URL(Astro.url.pathname, site).href;
+const slug = entry.id.split("/")[1] ?? entry.id;
+
+// Locale-aware small labels — Latin mono in EN, plain sans in FA (the
+// mono-label utility is Latin-only by design, §7.4).
+const labelClass = isFa ? "text-xs text-muted" : "mono-label text-muted";
+const dateClass = isFa ? "text-xs text-muted" : "font-mono text-xs text-muted";
+
+// Reading time — prose words only.
+const wordCount = (entry.body ?? "")
+  .replace(/```[\s\S]*?```/g, " ")
+  .split(/\s+/)
+  .filter(Boolean).length;
+const minutes = Math.max(1, Math.round(wordCount / 200));
+const minutesLabel = new Intl.NumberFormat(cfg.intlCode).format(minutes);
+
+const toc = headings.filter(
+  (heading) => heading.depth === 2 || heading.depth === 3,
+);
+
+const ogImage = new URL(isFa ? "/og-fa.png" : "/og-en.png", site).href;
+
+// Article JSON-LD — real dates from frontmatter, translated fields,
+// linked back to the site-wide Person/WebSite @ids.
+const articleSchema: Record<string, unknown> = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "@id": `${url}#article`,
+  headline: entry.data.title,
+  description: entry.data.seo.description,
+  datePublished: entry.data.pubDate.toISOString(),
+  dateModified: (entry.data.updated ?? entry.data.pubDate).toISOString(),
+  inLanguage: cfg.htmlLang,
+  image: ogImage,
+  keywords: entry.data.tags.join(", "),
+  mainEntityOfPage: url,
+  isPartOf: { "@id": `${site}/#website` },
+  author: { "@id": `${site}/#person` },
+  publisher: { "@id": `${site}/#person` },
+};
+---
+
+<BaseLayout
+  locale={locale}
+  title={entry.data.seo.title}
+  description={entry.data.seo.description}
+  ogType="article"
+  jsonLd={articleSchema}
+>
+  <Fragment slot="head">
+    <meta
+      property="article:published_time"
+      content={entry.data.pubDate.toISOString()}
+    />
+    {
+      entry.data.updated && (
+        <meta
+          property="article:modified_time"
+          content={entry.data.updated.toISOString()}
+        />
+      )
+    }
+    <meta property="article:author" content="AmirHo" />
+    {
+      entry.data.tags.map((tag) => (
+        <meta property="article:tag" content={tag} />
+      ))
+    }
+  </Fragment>
+
+  <article class="container-site py-12 md:py-16">
+    <p class="mono-label text-accent" aria-hidden="true">
+      $ cat ~/blog/{slug}.mdx
+    </p>
+
+    <LocalizedLink
+      href="/blog"
+      locale={locale}
+      class="group mt-4 inline-flex min-h-11 items-center gap-2 text-sm text-muted transition-colors duration-200 hover:text-accent"
+    >
+      <svg
+        class="size-4 rtl:-scale-x-100"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M19 12H5m6 6-6-6 6-6"></path>
+      </svg>
+      <span class={labelClass}>{dict.blog.backToAll}</span>
+    </LocalizedLink>
+
+    <header data-reveal="fade" class="mt-6 max-w-3xl">
+      <h1>{entry.data.title}</h1>
+      <p class="mt-4 text-lg text-muted">{entry.data.description}</p>
+
+      <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <p class={dateClass}>
+          <span class={labelClass}>{dict.blog.published}:</span>
+          <time datetime={entry.data.pubDate.toISOString()} class="ms-1.5">
+            {formatDate(entry.data.pubDate, locale)}
+          </time>
+        </p>
+        {
+          entry.data.updated && (
+            <p class={dateClass}>
+              <span class={labelClass}>{dict.blog.updated}:</span>
+              <time datetime={entry.data.updated.toISOString()} class="ms-1.5">
+                {formatDate(entry.data.updated, locale)}
+              </time>
+            </p>
+          )
+        }
+        <p class={dateClass}>
+          {minutesLabel}
+          <span class="ms-1">{dict.common.minRead}</span>
+        </p>
+      </div>
+
+      {
+        entry.data.tags.length > 0 && (
+          <ul class="mt-5 flex flex-wrap gap-1.5" aria-label={dict.blog.tags}>
+            {entry.data.tags.map((tag) => (
+              <li>
+                <TagChip label={tag} />
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </header>
+
+    <div
+      class="mt-10 grid items-start gap-10 lg:grid-cols-[15rem_minmax(0,1fr)]"
+    >
+      {
+        toc.length > 0 && (
+          <nav aria-label={dict.blog.toc} class="hidden lg:block">
+            <div class="sticky top-24 flex flex-col gap-3 border-s border-hairline ps-5">
+              <p class={labelClass}>{dict.blog.toc}</p>
+              <ul class="flex flex-col gap-2 text-sm">
+                {toc.map((heading) => (
+                  <li class:list={[heading.depth === 3 && "ps-4"]}>
+                    <a
+                      href={`#${heading.slug}`}
+                      class="text-muted transition-colors duration-200 hover:text-accent"
+                    >
+                      {heading.text}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </nav>
+        )
+      }
+
+      <div class="prose">
+        <slot />
+      </div>
+    </div>
+
+    {
+      (prev || next) && (
+        <nav
+          data-reveal="fade"
+          class="mt-16 border-t border-hairline pt-8"
+          aria-label={`${dict.blog.prevPost} · ${dict.blog.nextPost}`}
+        >
+          <div class="grid gap-4 sm:grid-cols-2">
+            {prev && (
+              <LocalizedLink
+                href={`/blog/${prev.id.split("/")[1] ?? prev.id}`}
+                locale={locale}
+                class="group flex min-h-11 flex-col gap-1.5 rounded-lg border border-hairline bg-surface p-4 transition-colors duration-200 hover:border-accent/60"
+              >
+                <span class="flex items-center gap-2">
+                  <svg
+                    class="size-4 rtl:-scale-x-100"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M19 12H5m6 6-6-6 6-6" />
+                  </svg>
+                  <span class={labelClass}>{dict.blog.prevPost}</span>
+                </span>
+                <span class="font-display text-lg transition-colors duration-200 group-hover:text-accent">
+                  {prev.data.title}
+                </span>
+              </LocalizedLink>
+            )}
+            {next && (
+              <LocalizedLink
+                href={`/blog/${next.id.split("/")[1] ?? next.id}`}
+                locale={locale}
+                class="group flex min-h-11 flex-col gap-1.5 rounded-lg border border-hairline bg-surface p-4 transition-colors duration-200 hover:border-accent/60 sm:col-start-2 sm:items-end sm:text-end"
+              >
+                <span class="flex items-center gap-2">
+                  <span class={labelClass}>{dict.blog.nextPost}</span>
+                  <svg
+                    class="size-4 rtl:-scale-x-100"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 12h14m-6-6 6 6-6 6" />
+                  </svg>
+                </span>
+                <span class="font-display text-lg transition-colors duration-200 group-hover:text-accent">
+                  {next.data.title}
+                </span>
+              </LocalizedLink>
+            )}
+          </div>
+        </nav>
+      )
+    }
+  </article>
+</BaseLayout>

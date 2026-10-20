@@ -1,0 +1,58 @@
+---
+import type { LocaleCode } from "../../i18n/config";
+import { getLocalizedPath, t } from "../../i18n/utils";
+
+/**
+ * Closing call-to-action. This is the one sanctioned use of the brand
+ * gradient (§6.1): a DECORATIVE panel background — never gradient
+ * text. All copy on it is black, which passes contrast on both
+ * gradient stops (#FF9F00 ≈ 10:1, #F4631E ≈ 6.5:1), in both themes.
+ */
+interface Props {
+  locale: LocaleCode;
+}
+
+const { locale } = Astro.props;
+const dict = t(locale);
+---
+
+<section class="container-site py-16 md:py-24">
+  <div
+    data-reveal="fade"
+    class="relative overflow-hidden rounded-xl bg-gradient-hi px-6 py-12 md:px-12 md:py-16"
+  >
+    <div
+      class="flex flex-col items-start gap-8 lg:flex-row lg:items-center lg:justify-between"
+    >
+      <div class="max-w-2xl">
+        <p
+          class="mb-4 font-mono text-xs text-black/70"
+          dir="ltr"
+          aria-hidden="true"
+        >
+          $ ./contact --now
+        </p>
+        <h2 class="text-3xl text-black md:text-4xl">{dict.home.ctaTitle}</h2>
+        <p class="mt-4 text-black/80">{dict.home.ctaText}</p>
+      </div>
+      <a
+        href={getLocalizedPath("/contact", locale)}
+        class="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-black px-7 py-3 text-base font-semibold text-white transition-opacity duration-200 hover:opacity-90"
+      >
+        {dict.home.ctaButton}
+        <svg
+          class="size-4 rtl:-scale-x-100"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M5 12h14m-6-6 6 6-6 6"></path>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>

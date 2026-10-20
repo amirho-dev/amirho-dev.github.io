@@ -1,0 +1,191 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import TimelineItem from "../../components/TimelineItem.astro";
+import SkillGroup from "../../components/SkillGroup.astro";
+import Button from "../../components/Button.astro";
+import { EXPERIENCE } from "../../data/experience";
+import { SKILL_GROUPS, type SkillLevel } from "../../data/skills";
+import { getResumePath } from "../../config/site";
+import type { LocaleCode } from "../../i18n/config";
+import { getLocalizedPath, t } from "../../i18n/utils";
+
+// FA mirror (§9): same sections, same data modules, same choreography —
+// locale="fa" only. Zero content drift.
+const locale: LocaleCode = "fa";
+const dict = t(locale);
+
+const skillLabels: Record<SkillLevel, { label: string; hint: string }> = {
+  daily: { label: dict.about.skillsDaily, hint: dict.about.skillsDailyHint },
+  comfortable: {
+    label: dict.about.skillsComfortable,
+    hint: dict.about.skillsComfortableHint,
+  },
+  exploring: {
+    label: dict.about.skillsExploring,
+    hint: dict.about.skillsExploringHint,
+  },
+};
+---
+
+<BaseLayout
+  locale={locale}
+  title={dict.meta.about.title}
+  description={dict.meta.about.description}
+>
+  <div class="container-site py-16 md:py-24">
+    <SectionHeading path="about" headingLevel={1} title={dict.about.title} />
+
+    <p data-reveal="fade" class="mt-8 max-w-3xl text-lg text-muted md:text-xl">
+      {dict.about.lead}
+    </p>
+
+    <section class="mt-16 md:mt-20" aria-labelledby="about-story">
+      <h2 id="about-story" data-reveal="fade" class="text-2xl md:text-3xl">
+        {dict.about.storyTitle}
+      </h2>
+      <div data-reveal-group class="mt-6 flex max-w-2xl flex-col gap-5">
+        {
+          dict.about.paragraphs.map((paragraph) => (
+            <p data-reveal-item class="text-muted">
+              {paragraph}
+            </p>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="mt-16 md:mt-20" aria-labelledby="about-timeline">
+      <h2 id="about-timeline" data-reveal="fade" class="text-2xl md:text-3xl">
+        {dict.about.timelineTitle}
+      </h2>
+      <ol class="mt-10 max-w-2xl">
+        {
+          EXPERIENCE.map((item) => (
+            <TimelineItem
+              year={item.year}
+              title={item.title[locale]}
+              description={item.description[locale]}
+            />
+          ))
+        }
+      </ol>
+    </section>
+
+    <section class="mt-16 md:mt-20" aria-labelledby="about-skills">
+      <h2 id="about-skills" data-reveal="fade" class="text-2xl md:text-3xl">
+        {dict.about.skillsTitle}
+      </h2>
+      <p data-reveal="fade" class="mt-3 max-w-2xl text-muted">
+        {dict.about.skillsSubtitle}
+      </p>
+      <div data-reveal-group class="mt-8 flex flex-col gap-6">
+        {
+          SKILL_GROUPS.map((group) => (
+            <div data-reveal-item>
+              <SkillGroup
+                level={group.level}
+                label={skillLabels[group.level].label}
+                hint={skillLabels[group.level].hint}
+                skills={group.skills}
+              />
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <div class="mt-16 grid gap-6 md:mt-20 md:grid-cols-2">
+      <section
+        data-reveal="up"
+        class="rounded-xl border border-hairline bg-surface p-6 shadow-card"
+        aria-labelledby="about-resume"
+      >
+        <h2 id="about-resume" class="font-display text-xl">
+          {dict.about.resumeTitle}
+        </h2>
+        <p class="mt-3 text-sm text-muted">{dict.about.resumeText}</p>
+        <div class="mt-6">
+          <Button
+            href={getResumePath(locale)}
+            download={locale === "en"
+              ? "AmirHo-Resume-EN.pdf"
+              : "AmirHo-Resume-FA.pdf"}
+          >
+            <svg
+              class="size-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 3v12m-6-6 6 6 6-6M5 21h14"></path>
+            </svg>
+            {dict.about.resumeButton}
+          </Button>
+        </div>
+        <p class="mt-3 text-xs text-muted">{dict.about.resumeOther}</p>
+      </section>
+
+      <section
+        data-reveal="up"
+        class="rounded-xl border border-hairline bg-surface p-6 shadow-card"
+        aria-labelledby="about-creator"
+      >
+        <h2 id="about-creator" class="font-display text-xl">
+          {dict.about.creatorTitle}
+        </h2>
+        <p class="mt-3 text-sm text-muted">{dict.about.creatorText}</p>
+        <div class="mt-6">
+          <Button
+            href={getLocalizedPath("/blog", locale)}
+            variant="secondary"
+            arrow
+          >
+            {dict.about.creatorLink}
+          </Button>
+        </div>
+      </section>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { initReveals, prefersReducedMotion } from "../../lib/reveal";
+  import { gsap } from "../../lib/gsap";
+
+  initReveals();
+
+  const timelineItems = document.querySelectorAll<HTMLElement>(
+    "[data-timeline-item]",
+  );
+
+  if (timelineItems.length > 0 && !prefersReducedMotion()) {
+    const ctx = gsap.context(() => {
+      timelineItems.forEach((item) => {
+        const progress = item.querySelector<HTMLElement>(
+          "[data-timeline-progress]",
+        );
+        if (!progress) return;
+        gsap.fromTo(
+          progress,
+          { scaleY: 0 },
+          {
+            scaleY: 1,
+            ease: "none",
+            scrollTrigger: {
+              trigger: item,
+              start: "top 80%",
+              end: "top 35%",
+              scrub: 0.4,
+            },
+          },
+        );
+      });
+    });
+    window.addEventListener("pagehide", () => ctx.revert());
+  }
+</script>

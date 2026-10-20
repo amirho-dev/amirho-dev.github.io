@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- AmirHo favicon — the brand mark: `~/` on a terminal badge.
+       Pure geometry (no font dependency), readable at 16px. The tilde
+       and slash are the same strokes the site header renders as live
+       text; colors are the locked accent on the terminal canvas. -->
+  <title>AmirHo</title>
+  <rect width="64" height="64" rx="14" fill="#0C1219"/>
+  <path d="M11 29c4-7 11-7 15 0s11 7 15 0" fill="none" stroke="#FE7743" stroke-width="6" stroke-linecap="round"/>
+  <path d="M40 52L54 16" fill="none" stroke="#FE7743" stroke-width="6" stroke-linecap="round"/>
+</svg>

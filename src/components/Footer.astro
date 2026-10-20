@@ -1,0 +1,145 @@
+---
+import { localeConfigs, type LocaleCode } from "../i18n/config";
+import { getLocalizedPath, t } from "../i18n/utils";
+import { SITE } from "../config/site";
+import { SOCIALS } from "../data/socials";
+import LocalizedLink from "./LocalizedLink.astro";
+
+/**
+ * Site footer: brand + tagline + social channels, a navigation mirror,
+ * an "elsewhere" column (direct email + the locale's RSS feed), and the
+ * build-credits bar.
+ *
+ * Identity data comes from the canonical sources — email from
+ * src/config/site.ts, social channels (URLs + hand-authored stroke
+ * icons) from src/data/socials.ts.
+ */
+interface Props {
+  locale: LocaleCode;
+}
+
+const { locale } = Astro.props;
+const dict = t(locale);
+const cfg = localeConfigs[locale];
+
+const NAV_ITEMS = [
+  { key: "home", path: "/" },
+  { key: "about", path: "/about" },
+  { key: "projects", path: "/projects" },
+  { key: "blog", path: "/blog" },
+  { key: "lab", path: "/lab" },
+  { key: "contact", path: "/contact" },
+] as const;
+
+// Locale-correct year: Gregorian digits for EN, Jalali with Persian
+// digits for FA (§7.5) — driven by the same Intl code as formatDate().
+const year = new Intl.DateTimeFormat(cfg.intlCode, {
+  year: "numeric",
+  timeZone: "UTC",
+}).format(new Date());
+
+const rssHref = getLocalizedPath("/rss.xml", locale);
+---
+
+<footer class="border-t border-hairline">
+  <div
+    class="container-site grid gap-12 py-14 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)] md:py-16"
+  >
+    <div class="flex flex-col items-start gap-5">
+      <LocalizedLink
+        href="/"
+        locale={locale}
+        aria-label={`AmirHo — ${dict.nav.home}`}
+        class="flex min-h-11 items-center rounded-lg font-mono text-lg font-bold transition-colors duration-200 hover:text-accent"
+      >
+        <span dir="ltr"><span class="text-accent">~/</span>AmirHo</span>
+      </LocalizedLink>
+      <p class="max-w-xs text-sm text-muted">{dict.footer.tagline}</p>
+      <ul
+        class="flex flex-wrap items-center gap-2"
+        aria-label={dict.a11y.socialLinks}
+      >
+        {
+          SOCIALS.map((social) => (
+            <li>
+              <a
+                href={social.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${social.label} ${dict.a11y.newTab}`}
+                class="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-hairline text-muted transition-colors duration-200 hover:border-hairline-strong hover:text-text"
+              >
+                <svg
+                  class="size-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <Fragment set:html={social.icon} />
+                </svg>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <nav aria-label={dict.footer.navigation}>
+      <h2 class="mono-label mb-4 text-muted">{dict.footer.navigation}</h2>
+      <ul class="grid grid-cols-2 gap-x-6 gap-y-1 md:grid-cols-1">
+        {
+          NAV_ITEMS.map((item) => (
+            <li>
+              <LocalizedLink
+                href={item.path}
+                locale={locale}
+                class="flex min-h-9 items-center rounded-lg text-sm text-muted transition-colors duration-200 hover:text-text"
+              >
+                {dict.nav[item.key]}
+              </LocalizedLink>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div>
+      <h2 class="mono-label mb-4 text-muted">{dict.common.elsewhere}</h2>
+      <ul class="flex flex-col gap-1">
+        <li>
+          <a
+            href={`mailto:${SITE.email}`}
+            aria-label={dict.a11y.emailLink}
+            class="flex min-h-9 items-center rounded-lg text-sm text-muted transition-colors duration-200 hover:text-text"
+          >
+            {dict.common.email} — <bdi>{SITE.email}</bdi>
+          </a>
+        </li>
+        <li>
+          <a
+            href={rssHref}
+            class="flex min-h-9 items-center rounded-lg text-sm text-muted transition-colors duration-200 hover:text-text"
+          >
+            {dict.footer.rss} — <bdi>{rssHref}</bdi>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="border-t border-hairline">
+    <div
+      class="container-site flex flex-col gap-2 py-6 text-sm text-muted sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p>© {year} AmirHo — {dict.footer.rights}</p>
+      <!-- mono only for the Latin (EN) string; Farsi keeps the body font -->
+      <p class:list={[locale === "en" ? "font-mono text-xs" : "text-xs"]}>
+        {dict.footer.builtWith}
+      </p>
+    </div>
+  </div>
+</footer>

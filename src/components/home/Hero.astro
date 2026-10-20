@@ -1,0 +1,545 @@
+---
+import { SITE } from "../../config/site";
+import type { LocaleCode } from "../../i18n/config";
+import { getLocalizedPath, t } from "../../i18n/utils";
+import TerminalWindow from "../TerminalWindow.astro";
+import AvailabilityBadge from "../AvailabilityBadge.astro";
+import Button from "../Button.astro";
+
+/**
+ * Full-viewport hero: terminal-boot intro → staged content reveal →
+ * perpetual role rotation.
+ *
+ * Boot system (§11 Phase 8, ≤2.5s with skip):
+ *  · An inline pre-paint script adds `.boot-pending` to <html> ONLY when
+ *    motion is allowed. Component CSS hides the hero content, the boot
+ *    output lines and the command text under that class.
+ *  · The module script plays the typing timeline (~2.2s), then removes
+ *    the class and runs the staged reveal (SplitText: chars EN /
+ *    words FA — never chars for the joined Arabic script, §7.4).
+ *  · Escape hatches, all fully coded: the skip button (in the terminal
+ *    header), a 2.6s safety timer (if modules never load), and the
+ *    reduced-motion / no-JS paths, which render everything statically
+ *    with the boot lines pre-completed.
+ *  · Hidden content uses `visibility` only — layout is reserved, so the
+ *    reveal causes zero layout shift.
+ *
+ * Role rotation: ScrambleText for EN, slide-fade for FA (§7.4).
+ */
+interface Props {
+  locale: LocaleCode;
+}
+
+const { locale } = Astro.props;
+const dict = t(locale);
+const isFa = locale === "fa";
+
+const bootSequence = [
+  {
+    cmd: dict.hero.bootWhoamiCmd,
+    out: dict.hero.bootWhoamiOut,
+    outClass: "text-term-text",
+  },
+  {
+    cmd: dict.hero.bootSkillsCmd,
+    out: dict.hero.bootSkillsOut,
+    outClass: "text-term-muted",
+  },
+  {
+    cmd: dict.hero.bootInitCmd,
+    out: dict.hero.bootInitOut,
+    outClass: "text-ok",
+  },
+];
+---
+
+<section
+  data-hero
+  data-hero-locale={locale}
+  data-hero-roles={JSON.stringify(dict.hero.roles)}
+  class="relative flex min-h-[calc(100dvh-4rem)] items-center overflow-hidden"
+>
+  {
+    /* Decorative oversized prompt — absolute with logical `end`, so the
+      composition mirrors under RTL (§7.4 audit). Clipped by overflow. */
+  }
+  <div
+    class="pointer-events-none absolute -end-10 top-1/2 -z-10 hidden -translate-y-1/2 select-none font-mono text-[clamp(10rem,22vw,18rem)] font-bold leading-none text-text/10 lg:block"
+    dir="ltr"
+    aria-hidden="true"
+  >
+    ~/
+  </div>
+
+  <div class="container-site w-full py-20">
+    <TerminalWindow title="amirho@portfolio — bash" class="max-w-2xl">
+      <Fragment slot="header-extra">
+        <button
+          type="button"
+          data-hero-skip
+          class="inline-flex min-h-11 items-center rounded-lg border border-term-border bg-term px-3 font-mono text-xs text-term-muted transition-colors duration-200 hover:border-accent hover:text-accent"
+        >
+          {dict.hero.skipIntro}
+        </button>
+      </Fragment>
+      <ol class="flex flex-col gap-1">
+        {
+          bootSequence.map((line) => (
+            <Fragment>
+              <li class="flex items-baseline gap-2 whitespace-nowrap">
+                <span class="shrink-0 text-term-muted" aria-hidden="true">
+                  ${" "}
+                </span>
+                <span data-boot-cmd>{line.cmd}</span>
+                <span
+                  data-caret
+                  class="animate-blink text-accent"
+                  aria-hidden="true"
+                >
+                  ▌
+                </span>
+              </li>
+              <li
+                data-boot-out
+                class:list={["whitespace-normal", line.outClass]}
+              >
+                {line.out}
+              </li>
+            </Fragment>
+          ))
+        }
+      </ol>
+    </TerminalWindow>
+
+    <div
+      data-hero-content
+      class="mt-8 flex max-w-2xl flex-col items-start gap-5"
+    >
+      <div data-hero-fade>
+        <AvailabilityBadge locale={locale} />
+      </div>
+
+      <h1 class="flex flex-col items-start gap-3">
+        <span
+          data-hero-greeting
+          class:list={[
+            isFa ? "text-sm font-medium" : "mono-label",
+            "text-muted",
+          ]}
+        >
+          {dict.hero.greeting}
+        </span>
+        <span class="flex flex-wrap items-baseline gap-x-3">
+          {
+            /* The name is a Latin brand mark — pinned LTR inside the RTL
+              heading so the reading order greeting → name → suffix holds. */
+          }
+          <span
+            data-hero-name
+            class="font-display text-6xl font-bold text-accent"
+            dir="ltr"
+          >
+            {SITE.name}
+          </span>
+          {
+            isFa && dict.hero.nameSuffix && (
+              <span data-hero-suffix class="font-display text-3xl md:text-4xl">
+                {dict.hero.nameSuffix}
+              </span>
+            )
+          }
+        </span>
+      </h1>
+
+      <p
+        data-hero-role-line
+        class="flex flex-wrap items-center gap-2 whitespace-nowrap font-mono text-lg md:text-xl"
+      >
+        <span class="text-accent" aria-hidden="true">&gt;</span>
+        <span data-role class:list={[isFa ? "font-sans" : "", "min-h-[1.5em]"]}>
+          {dict.hero.roles[0]}
+        </span>
+        <span class="animate-blink text-accent" aria-hidden="true">▌</span>
+      </p>
+
+      <p data-hero-fade class="max-w-xl text-lg text-muted">
+        {dict.hero.tagline}
+      </p>
+
+      <div data-hero-fade class="mt-2 flex flex-wrap items-center gap-3">
+        <Button href={getLocalizedPath("/projects", locale)} arrow
+          >{dict.hero.ctaProjects}</Button
+        >
+        <Button href={getLocalizedPath("/contact", locale)} variant="secondary">
+          {dict.hero.ctaContact}
+        </Button>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="pointer-events-none absolute inset-x-0 bottom-5 flex justify-center"
+  >
+    <a
+      data-hero-scroll
+      href="#featured"
+      aria-label={dict.a11y.scrollDown}
+      class="pointer-events-auto flex flex-col items-center gap-1 text-muted transition-colors duration-200 hover:text-accent"
+    >
+      <span
+        class:list={[
+          isFa ? "text-xs" : "font-mono text-[10px] uppercase tracking-[0.2em]",
+        ]}
+      >
+        {dict.hero.scroll}
+      </span>
+      <svg
+        class="hero-bob size-4"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M12 5v14m-6-6 6 6 6-6"></path>
+      </svg>
+    </a>
+  </div>
+</section>
+
+<script is:inline>
+  // Pre-paint boot gate — runs synchronously during parse, before the
+  // hero can paint. Arms the boot ONLY when motion is allowed; the
+  // reduced-motion and no-JS paths keep the fully static render.
+  (() => {
+    try {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      document.documentElement.classList.add("boot-pending");
+      // Safety valve: if the module script never arrives, restore the
+      // static render. The module marks heroBootDone when it takes over.
+      window.setTimeout(() => {
+        const root = document.documentElement;
+        if (!root.dataset.heroBootDone) {
+          root.classList.remove("boot-pending");
+          root.dataset.heroBootDone = "true";
+        }
+      }, 2600);
+      // Skip works even before the module loads (slow networks): this
+      // listener restores the static render on its own.
+      const skip = document.querySelector("[data-hero-skip]");
+      if (skip) {
+        skip.addEventListener("click", () => {
+          const root = document.documentElement;
+          root.classList.remove("boot-pending");
+          root.dataset.heroBootDone = "true";
+        });
+      }
+    } catch {
+      /* motion preference unavailable — keep the static render */
+    }
+  })();
+</script>
+
+<style>
+  /* Carets are JS-driven decoration — hidden until the boot types them. */
+  [data-caret] {
+    visibility: hidden;
+  }
+
+  /* The skip control only exists while the boot owns the screen. */
+  [data-hero-skip] {
+    visibility: hidden;
+  }
+  :global(.boot-pending) [data-hero-skip] {
+    visibility: visible;
+  }
+
+  /* Pre-paint boot state: command text, outputs, hero content and the
+     scroll hint wait for the module script. `visibility` (never
+     `display`) so all layout is reserved — zero shift on reveal. */
+  :global(.boot-pending) [data-boot-cmd],
+  :global(.boot-pending) [data-boot-out],
+  :global(.boot-pending) [data-hero-content],
+  :global(.boot-pending) [data-hero-scroll] {
+    visibility: hidden;
+  }
+
+  .hero-bob {
+    animation: hero-bob 2.2s ease-in-out infinite;
+  }
+  @keyframes hero-bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(6px);
+    }
+  }
+</style>
+
+<script>
+  import { gsap, SplitText } from "../../lib/gsap";
+
+  const BOOT_CLASS = "boot-pending";
+
+  const hero = document.querySelector<HTMLElement>("[data-hero]");
+  const root = document.documentElement;
+
+  const content =
+    hero?.querySelector<HTMLElement>("[data-hero-content]") ?? null;
+  const scrollHint =
+    hero?.querySelector<HTMLElement>("[data-hero-scroll]") ?? null;
+  const skipButton =
+    hero?.querySelector<HTMLButtonElement>("[data-hero-skip]") ?? null;
+  const roleEl = hero?.querySelector<HTMLElement>("[data-role]") ?? null;
+  const roleLine =
+    hero?.querySelector<HTMLElement>("[data-hero-role-line]") ?? null;
+  const greetingEl =
+    hero?.querySelector<HTMLElement>("[data-hero-greeting]") ?? null;
+  const nameEl = hero?.querySelector<HTMLElement>("[data-hero-name]") ?? null;
+  const suffixEl =
+    hero?.querySelector<HTMLElement>("[data-hero-suffix]") ?? null;
+
+  const cmds = hero
+    ? Array.from(hero.querySelectorAll<HTMLElement>("[data-boot-cmd]"))
+    : [];
+  const outs = hero
+    ? Array.from(hero.querySelectorAll<HTMLElement>("[data-boot-out]"))
+    : [];
+  const carets = hero
+    ? Array.from(hero.querySelectorAll<HTMLElement>("[data-caret]"))
+    : [];
+  const fades = hero
+    ? Array.from(hero.querySelectorAll<HTMLElement>("[data-hero-fade]"))
+    : [];
+
+  // Unless the inline pre-paint script armed the boot (it only arms when
+  // motion is allowed), bail to the static render. This single guard
+  // covers reduced motion, no-JS, and the safety-timer path.
+  if (
+    !hero ||
+    !content ||
+    cmds.length === 0 ||
+    outs.length !== cmds.length ||
+    !root.classList.contains(BOOT_CLASS)
+  ) {
+    root.classList.remove(BOOT_CLASS);
+  } else {
+    root.dataset.heroBootDone = "true";
+
+    const isRtl = root.dir === "rtl";
+    const isFa = hero.dataset.heroLocale === "fa";
+    const roles: string[] = JSON.parse(
+      hero.dataset.heroRoles ?? "[]",
+    ) as string[];
+    const cmdTexts = cmds.map((el) => el.textContent ?? "");
+    const typeDurations = [0.14, 0.5, 0.5];
+
+    let revealTl: gsap.core.Timeline | null = null;
+    let rotationTl: gsap.core.Timeline | null = null;
+    let greetingSplit: SplitText | null = null;
+    let nameSplit: SplitText | null = null;
+
+    const ctx = gsap.context(() => {
+      /** Types a command into its span (plain rAF-free char reveal). */
+      const typeCommand = (
+        el: HTMLElement,
+        text: string,
+        duration: number,
+      ): gsap.core.Tween => {
+        const state = { count: 0 };
+        return gsap.to(state, {
+          count: text.length,
+          duration,
+          ease: "none",
+          onUpdate: () => {
+            el.textContent = text.slice(0, Math.round(state.count));
+          },
+        });
+      };
+
+      /** Perpetual role rotation: ScrambleText EN / slide-fade FA (§7.4). */
+      const startRotation = (): void => {
+        if (!roleEl || roles.length < 2) return;
+        const HOLD = 2.2;
+        rotationTl = gsap.timeline({ repeat: -1 });
+        const queue = [...roles.slice(1), roles[0]];
+        queue.forEach((role) => {
+          if (isFa) {
+            rotationTl.to(roleEl, {
+              y: -10,
+              autoAlpha: 0,
+              duration: 0.22,
+              ease: "power2.in",
+            });
+            rotationTl.call(() => {
+              roleEl.textContent = role;
+            });
+            rotationTl.fromTo(
+              roleEl,
+              { y: 10 },
+              { y: 0, autoAlpha: 1, duration: 0.3, ease: "power2.out" },
+            );
+          } else {
+            rotationTl.to(roleEl, {
+              duration: 0.7,
+              scrambleText: { text: role, chars: "upperCase", speed: 1.1 },
+            });
+          }
+          rotationTl.to({}, { duration: HOLD });
+        });
+      };
+
+      /** Post-boot reveal: class off → SplitText heading → staged fades. */
+      const startReveal = (): void => {
+        root.classList.remove(BOOT_CLASS);
+        if (skipButton) skipButton.hidden = true;
+
+        // Chars for EN, WORDS for FA — char splits break the joined
+        // Arabic script (§7.4).
+        const splitType = isFa ? ("words" as const) : ("chars,words" as const);
+        if (greetingEl)
+          greetingSplit = new SplitText(greetingEl, { type: splitType });
+        if (nameEl) nameSplit = new SplitText(nameEl, { type: splitType });
+
+        const pieces = (split: SplitText | null): HTMLElement[] => {
+          if (!split) return [];
+          return split.chars && split.chars.length > 0
+            ? split.chars
+            : split.words;
+        };
+        const greetingPieces = pieces(greetingSplit);
+        const namePieces = pieces(nameSplit);
+
+        gsap.set(greetingPieces, { autoAlpha: 0, y: 12 });
+        gsap.set(namePieces, { autoAlpha: 0, y: 26 });
+
+        revealTl = gsap.timeline({ defaults: { ease: "power3.out" } });
+        if (greetingPieces.length > 0) {
+          revealTl.to(greetingPieces, {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.4,
+            stagger: 0.03,
+          });
+        }
+        if (namePieces.length > 0) {
+          revealTl.to(
+            namePieces,
+            { autoAlpha: 1, y: 0, duration: 0.55, stagger: 0.05 },
+            "-=0.25",
+          );
+        }
+        if (suffixEl)
+          revealTl.to(
+            suffixEl,
+            { autoAlpha: 1, y: 0, duration: 0.4 },
+            "-=0.35",
+          );
+        if (roleLine)
+          revealTl.to(
+            roleLine,
+            { autoAlpha: 1, x: 0, duration: 0.45 },
+            "-=0.3",
+          );
+        if (fades.length > 0) {
+          revealTl.to(
+            fades,
+            { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.09 },
+            "-=0.25",
+          );
+        }
+        if (scrollHint)
+          revealTl.to(scrollHint, { autoAlpha: 1, duration: 0.6 }, "-=0.2");
+
+        revealTl.call(() => {
+          // Restore pristine DOM once the intro is done.
+          greetingSplit?.revert();
+          nameSplit?.revert();
+          const cleared = [
+            ...fades,
+            roleLine,
+            scrollHint,
+            suffixEl,
+            greetingEl,
+            nameEl,
+          ].filter((el): el is HTMLElement => el !== null);
+          if (cleared.length > 0)
+            gsap.set(cleared, { clearProps: "transform,opacity,visibility" });
+          startRotation();
+        });
+      };
+
+      /** Skip: kill everything, restore the static final state, rotate. */
+      const finalize = (): void => {
+        bootTl.kill();
+        revealTl?.kill();
+        revealTl = null;
+        rotationTl?.kill();
+        rotationTl = null;
+
+        cmds.forEach((cmd, i) => {
+          cmd.textContent = cmdTexts[i];
+        });
+        greetingSplit?.revert();
+        nameSplit?.revert();
+        greetingSplit = null;
+        nameSplit = null;
+        if (roleEl) roleEl.textContent = roles[0] ?? "";
+
+        root.classList.remove(BOOT_CLASS);
+        if (skipButton) skipButton.hidden = true;
+
+        const cleared = [
+          ...cmds,
+          ...outs,
+          ...carets,
+          ...fades,
+          roleLine,
+          roleEl,
+          scrollHint,
+          suffixEl,
+          greetingEl,
+          nameEl,
+        ].filter((el): el is HTMLElement => el !== null);
+        if (cleared.length > 0) gsap.set(cleared, { clearProps: "all" });
+
+        startRotation();
+      };
+
+      // Initial states — applied while the class still hides everything,
+      // so the staged reveal can never flash.
+      gsap.set(fades, { autoAlpha: 0, y: 18 });
+      gsap.set(outs, { autoAlpha: 0 });
+      if (roleLine) gsap.set(roleLine, { autoAlpha: 0, x: isRtl ? 24 : -24 });
+      if (scrollHint) gsap.set(scrollHint, { autoAlpha: 0 });
+      if (suffixEl) gsap.set(suffixEl, { autoAlpha: 0, y: 12 });
+      if (greetingEl) gsap.set(greetingEl, { autoAlpha: 0 });
+      if (nameEl) gsap.set(nameEl, { autoAlpha: 0 });
+
+      // Boot timeline — ~2.2s total (≤ the 2.5s spec ceiling).
+      const bootTl = gsap.timeline({ onComplete: () => startReveal() });
+
+      cmds.forEach((cmd, i) => {
+        const caret = carets[i];
+        const isLast = i === cmds.length - 1;
+        bootTl.call(() => {
+          cmd.textContent = "";
+          gsap.set(cmd, { autoAlpha: 1 });
+          if (caret) gsap.set(caret, { autoAlpha: 1 });
+        });
+        bootTl.add(typeCommand(cmd, cmdTexts[i], typeDurations[i] ?? 0.4));
+        bootTl.to(outs[i], { autoAlpha: 1, duration: 0.18 }, "+=0.12");
+        if (caret && !isLast) bootTl.set(caret, { autoAlpha: 0 });
+      });
+      bootTl.to({}, { duration: 0.2 });
+
+      skipButton?.addEventListener("click", finalize);
+    }, hero);
+
+    window.addEventListener("pagehide", () => ctx.revert());
+  }
+</script>

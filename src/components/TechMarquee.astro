@@ -1,0 +1,83 @@
+---
+import type { LocaleCode } from "../i18n/config";
+import { t } from "../i18n/utils";
+
+/**
+ * Perpetual tech-name marquee — the shared strip primitive (§9 tree:
+ * components/TechMarquee.astro; the home section wrapper of the same
+ * name lives in components/home/ and consumes this one).
+ *
+ *  · Fully CSS-driven (the `animate-marquee` token from global.css);
+ *    under RTL the unlayered `marquee-rtl` rule plays the mirrored
+ *    keyframes so the strip travels in reverse (§7.4).
+ *  · The track is `dir="ltr"` — the names are Latin and the layout
+ *    order must match the loop math; page-level anchoring still comes
+ *    from the RTL container, which is exactly what the mirrored
+ *    keyframes expect.
+ *  · Accessibility: a visually hidden list carries the real content;
+ *    the moving track is aria-hidden. The symmetric edge fade mask is
+ *    direction-agnostic, so it holds in both locales.
+ *  · Under prefers-reduced-motion the Phase 1 CSS kill switch freezes
+ *    the strip — names remain readable and the hidden list intact.
+ */
+interface Props {
+  locale: LocaleCode;
+  /** Latin tech names, in display order. */
+  items: string[];
+  class?: string;
+}
+
+const { locale, items, class: className } = Astro.props;
+const dict = t(locale);
+
+// Two identical copies make the loop seamless: every cell ends with its
+// own separator + end-padding, so one copy is exactly one loop period.
+const track = [...items, ...items];
+---
+
+<div
+  class:list={[
+    "marquee-mask relative select-none overflow-hidden border-y border-hairline py-5",
+    className,
+  ]}
+>
+  <ul class="sr-only" aria-label={dict.a11y.techMarquee}>
+    {items.map((item) => <li>{item}</li>)}
+  </ul>
+
+  <div
+    class="flex w-max animate-marquee will-change-transform hover:[animation-play-state:paused]"
+    dir="ltr"
+    aria-hidden="true"
+  >
+    {
+      track.map((item) => (
+        <span class="flex shrink-0 items-center gap-8 pe-8">
+          <span class="mono-label text-text">{item}</span>
+          <span class="mono-label text-accent">*</span>
+        </span>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  /* Symmetric edge fade — identical under LTR and RTL. Mask stops use
+     color keywords purely as alpha anchors (not design colors). */
+  .marquee-mask {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 8%,
+      black 92%,
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 8%,
+      black 92%,
+      transparent
+    );
+  }
+</style>

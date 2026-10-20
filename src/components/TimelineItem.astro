@@ -1,0 +1,48 @@
+---
+/**
+ * One milestone on the about-page timeline.
+ *
+ *  · The rail is per-item (hairline base + accent progress overlay), so
+ *    the page's scroll-draw script scrubs each segment with transform
+ *    only (§12) — no layout properties are touched.
+ *  · The accent progress carries NO CSS initial state on purpose: GSAP
+ *    applies scaleY(0) at init (JS-applied from-states, same philosophy
+ *    as reveal.ts). Tailwind's scale utilities use the independent
+ *    `scale` CSS property, which would multiply with — not yield to —
+ *    GSAP's transform.
+ *  · Reduced motion / no-JS: the accent rail simply stays fully drawn —
+ *    the static design IS the completed animation.
+ *  · Years are Gregorian stats — Latin digits in both locales (§7.5).
+ *  · All positioning is logical (`start`, `ps`, `-ms`), so the whole
+ *    rail mirrors under RTL for free.
+ */
+interface Props {
+  /** Gregorian year — Latin digits in both locales (§7.5). */
+  year: number;
+  /** Localized milestone title. */
+  title: string;
+  /** Localized milestone description. */
+  description: string;
+}
+
+const { year, title, description } = Astro.props;
+---
+
+<li class="relative pb-12 ps-12 last:pb-0" data-timeline-item>
+  <span
+    class="absolute start-4 top-0 bottom-0 w-px bg-hairline"
+    aria-hidden="true"></span>
+  <span
+    class="absolute start-4 top-0 bottom-0 w-px bg-accent"
+    data-timeline-progress
+    aria-hidden="true"></span>
+  <span
+    class="absolute start-4 top-1.5 -ms-1.5 size-3 rounded-full border-2 border-bg bg-accent"
+    aria-hidden="true"></span>
+
+  <div data-reveal="start">
+    <p class="font-mono text-sm text-accent" dir="ltr">{year}</p>
+    <h3 class="mt-2 text-xl md:text-2xl">{title}</h3>
+    <p class="mt-2 max-w-xl text-muted">{description}</p>
+  </div>
+</li>

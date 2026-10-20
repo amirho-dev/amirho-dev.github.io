@@ -1,0 +1,275 @@
+---
+import type { LocaleCode } from "../i18n/config";
+import { t } from "../i18n/utils";
+import LanguageSwitcher from "./LanguageSwitcher.astro";
+import ThemeToggle from "./ThemeToggle.astro";
+
+/**
+ * Full-screen mobile navigation overlay.
+ *  · Opened by any [data-mobile-nav-open] button (the header hamburger).
+ *  · Closed by its own button, Escape, link navigation, or crossing the
+ *    desktop breakpoint.
+ *  · Entrance is a GSAP timeline: overlay fade + links staggering in from
+ *    the inline-start side — direction-aware, so FA slides from the right
+ *    (§7.4). Reduced motion skips straight to the end state.
+ *  · While open: body scroll is locked (with scrollbar compensation),
+ *    focus is trapped inside, and focus returns to the opener on close.
+ */
+interface Props {
+  locale: LocaleCode;
+  links: { label: string; href: string; active: boolean }[];
+}
+
+const { locale, links } = Astro.props;
+const dict = t(locale);
+---
+
+<div
+  id="mobile-nav"
+  data-mobile-nav
+  class="invisible fixed inset-0 z-50 flex flex-col bg-bg"
+  role="dialog"
+  aria-modal="true"
+  aria-label={dict.a11y.mobileNav}
+  aria-hidden="true"
+>
+  <div class="shrink-0 border-b border-hairline">
+    <div class="container-site flex h-16 items-center justify-between gap-2">
+      <span dir="ltr" class="font-mono text-lg font-bold">
+        <span class="text-accent">~/</span>AmirHo
+      </span>
+      <div class="flex items-center gap-2">
+        <ThemeToggle locale={locale} />
+        <button
+          type="button"
+          data-mobile-nav-close
+          class="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-hairline text-muted transition-colors duration-200 hover:border-hairline-strong hover:text-text"
+          aria-label={dict.a11y.closeMenu}
+        >
+          <svg
+            class="size-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M6 6l12 12M18 6 6 18"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="flex-1 overflow-y-auto" aria-label={dict.a11y.primaryNav}>
+    <ul class="container-site flex flex-col gap-1 py-8">
+      {
+        links.map((link, index) => (
+          <li>
+            <a
+              data-nav-link
+              href={link.href}
+              aria-current={link.active ? "page" : undefined}
+              class:list={[
+                "flex items-baseline gap-4 rounded-lg py-3 font-display text-3xl transition-colors duration-200",
+                link.active ? "text-accent" : "text-text hover:text-accent",
+              ]}
+            >
+              <span class="mono-label shrink-0 text-muted" aria-hidden="true">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span>{link.label}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  <div class="shrink-0 border-t border-hairline">
+    <div class="container-site flex justify-center py-5" data-nav-extra>
+      <LanguageSwitcher locale={locale} />
+    </div>
+  </div>
+</div>
+
+<script>
+  import { gsap } from "gsap";
+
+  const overlay = document.getElementById("mobile-nav");
+  const closeBtn = overlay?.querySelector<HTMLButtonElement>(
+    "[data-mobile-nav-close]",
+  );
+
+  if (overlay && closeBtn) {
+    const links = Array.from(
+      overlay.querySelectorAll<HTMLElement>("[data-nav-link]"),
+    );
+    const extra = overlay.querySelector<HTMLElement>("[data-nav-extra]");
+    const focusable = Array.from(
+      overlay.querySelectorAll<HTMLElement>("a[href], button:not([disabled])"),
+    );
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const isRtl = document.documentElement.dir === "rtl";
+    // Links slide in from the inline-start side (§7.4):
+    // start = left in LTR, start = right in RTL.
+    const slideFrom = isRtl ? 40 : -40;
+
+    let isOpen = false;
+    let opener: HTMLElement | null = null;
+
+    const lockScroll = (): void => {
+      const scrollbar =
+        window.innerWidth - document.documentElement.clientWidth;
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+      if (scrollbar > 0) {
+        document.body.style.paddingInlineEnd = `${scrollbar}px`;
+      }
+    };
+
+    const unlockScroll = (): void => {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+      document.body.style.paddingInlineEnd = "";
+    };
+
+    const clearMotionStyles = (): void => {
+      gsap.set(overlay, { clearProps: "opacity" });
+      if (links.length > 0) gsap.set(links, { clearProps: "opacity,x" });
+      if (extra) gsap.set(extra, { clearProps: "opacity,y" });
+    };
+
+    const syncOpenButtons = (): void => {
+      document
+        .querySelectorAll<HTMLButtonElement>("[data-mobile-nav-open]")
+        .forEach((button) =>
+          button.setAttribute("aria-expanded", isOpen ? "true" : "false"),
+        );
+    };
+
+    // Built once inside gsap.context (§12: context-wrapped, with cleanup);
+    // played forward on open, reversed on close. The overlay's fromTo
+    // pre-applies opacity:0 at creation, so nothing can flash before
+    // the first play.
+    let timeline: gsap.core.Timeline | null = null;
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        paused: true,
+        defaults: { ease: "power3.out" },
+      });
+      tl.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.25 });
+      if (links.length > 0) {
+        tl.fromTo(
+          links,
+          { x: slideFrom, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.45, stagger: 0.06 },
+          "-=0.05",
+        );
+      }
+      if (extra) {
+        tl.fromTo(
+          extra,
+          { y: 16, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.3 },
+          "-=0.25",
+        );
+      }
+      tl.eventCallback("onReverseComplete", () =>
+        overlay.classList.add("invisible"),
+      );
+      timeline = tl;
+    }, overlay);
+
+    const closeInstantly = (): void => {
+      overlay.classList.add("invisible");
+      timeline?.pause(0);
+      clearMotionStyles();
+    };
+
+    const openMenu = (): void => {
+      if (isOpen) return;
+      isOpen = true;
+      opener =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+      overlay.setAttribute("aria-hidden", "false");
+      syncOpenButtons();
+      lockScroll();
+      overlay.classList.remove("invisible");
+      if (reducedMotion.matches) {
+        clearMotionStyles();
+      } else if (timeline) {
+        timeline.timeScale(1).play(0);
+      }
+      closeBtn.focus();
+    };
+
+    const closeMenu = (restoreFocus = true): void => {
+      if (!isOpen) return;
+      isOpen = false;
+      overlay.setAttribute("aria-hidden", "true");
+      syncOpenButtons();
+      unlockScroll();
+      if (restoreFocus && opener) {
+        opener.focus();
+        opener = null;
+      }
+      if (reducedMotion.matches) {
+        closeInstantly();
+      } else if (timeline) {
+        timeline.timeScale(1.6).reverse();
+      }
+    };
+
+    document
+      .querySelectorAll<HTMLButtonElement>("[data-mobile-nav-open]")
+      .forEach((button) => button.addEventListener("click", openMenu));
+
+    closeBtn.addEventListener("click", () => closeMenu());
+
+    // Any in-overlay navigation closes the overlay (full page loads
+    // follow anyway — this also keeps back/forward-cache restores clean).
+    overlay.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((link) => {
+      link.addEventListener("click", () => closeMenu(false));
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (!isOpen) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeMenu();
+        return;
+      }
+      if (event.key === "Tab" && focusable.length > 0) {
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement;
+        if (!event.shiftKey && active === last) {
+          event.preventDefault();
+          first.focus();
+        } else if (event.shiftKey && active === first) {
+          event.preventDefault();
+          last.focus();
+        }
+      }
+    });
+
+    // Crossing into the desktop breakpoint closes the overlay instantly.
+    window
+      .matchMedia("(min-width: 768px)")
+      .addEventListener("change", (event) => {
+        if (!event.matches || !isOpen) return;
+        isOpen = false;
+        overlay.setAttribute("aria-hidden", "true");
+        syncOpenButtons();
+        unlockScroll();
+        closeInstantly();
+      });
+
+    window.addEventListener("pagehide", () => ctx.revert());
+  }
+</script>

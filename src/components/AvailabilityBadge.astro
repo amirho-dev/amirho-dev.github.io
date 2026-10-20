@@ -1,0 +1,39 @@
+---
+import { SITE } from "../config/site";
+import type { LocaleCode } from "../i18n/config";
+import { t } from "../i18n/utils";
+
+/**
+ * Pulsing "open to work" pill. The ok-colored dot, border and tint carry
+ * the status color; the LABEL stays on the `text` token so it keeps
+ * ≥4.5:1 contrast in both themes (#309898 as small text would fall to
+ * ~3.4:1 on the light background).
+ *
+ * Renders nothing while SITE.availableForWork is false — the config in
+ * src/config/site.ts is the single source of the availability state.
+ */
+interface Props {
+  locale: LocaleCode;
+  class?: string;
+}
+
+const { locale, class: className } = Astro.props;
+const dict = t(locale);
+---
+
+{
+  SITE.availableForWork && (
+    <span
+      class:list={[
+        "inline-flex items-center gap-2.5 rounded-full border border-ok/50 bg-ok/10 px-4 py-1.5 text-sm font-medium text-text",
+        className,
+      ]}
+    >
+      <span
+        class="size-2.5 animate-pulse-dot rounded-full bg-ok"
+        aria-hidden="true"
+      />
+      {dict.common.available}
+    </span>
+  )
+}
