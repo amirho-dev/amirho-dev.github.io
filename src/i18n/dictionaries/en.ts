@@ -111,9 +111,9 @@ const en = {
     skillsExploring: "Exploring",
     skillsExploringHint:
       "Tools I'm actively learning — ask me again in six months.",
-    resumeTitle: "Résumé",
+    resumeTitle: "Resume",
     resumeText: "One page, no fluff — the same story as above, in PDF form.",
-    resumeButton: "Download résumé (PDF)",
+    resumeButton: "Download resume (PDF)",
     resumeOther: "Farsi version also available.",
     creatorTitle: "Beyond the code",
     creatorText:
@@ -299,7 +299,7 @@ const en = {
     about: {
       title: "About — AmirHo | Full-Stack Developer",
       description:
-        "The story behind AmirHo: from a 2020 Linux homelab and freelance web design to full-stack engineering — with an honest skills matrix, real timeline, and downloadable résumé.",
+        "The story behind AmirHo: from a 2020 Linux homelab and freelance web design to full-stack engineering — with an honest skills matrix, real timeline, and downloadable resume.",
     },
     projects: {
       title: "Projects — AmirHo | Case Studies",

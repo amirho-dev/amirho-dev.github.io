@@ -24,7 +24,6 @@ const { entry } = Astro.props;
 const { Content, headings } = await render(entry);
 
 // Chronological walk (ascending pubDate):
-// «قبلی» = نوشته‌ی قدیمی‌تر، «بعدی» = نوشته‌ی جدیدتر.
 const timeline = (
   await getCollection("blog", ({ data }) => data.locale === "fa" && !data.draft)
 ).sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf());

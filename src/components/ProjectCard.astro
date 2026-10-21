@@ -43,9 +43,7 @@ const href = getLocalizedPath(`/projects/${project.slug}`, locale);
     href={href}
     class="flex h-full flex-col overflow-hidden rounded-xl border border-hairline bg-surface shadow-card transition-colors duration-200 hover:border-accent/60"
   >
-    <div
-      class="relative aspect-[16/10] overflow-hidden border-b border-hairline"
-    >
+    <div class="relative aspect-16/10 overflow-hidden border-b border-hairline">
       <Image
         src={project.image}
         alt={project.imageAlt}
@@ -60,7 +58,7 @@ const href = getLocalizedPath(`/projects/${project.slug}`, locale);
           combination that passes contrast for 12px type in both themes. */
       }
       <span
-        class="absolute start-3 top-3 rounded-md bg-accent px-2 py-1 font-mono text-xs font-bold uppercase tracking-widest text-black"
+        class="absolute inset-s-3 top-3 rounded-md bg-accent px-2 py-1 font-mono text-xs font-bold uppercase tracking-widest text-black"
       >
         {project.domain}
       </span>

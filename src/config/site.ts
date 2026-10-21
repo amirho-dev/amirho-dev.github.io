@@ -29,7 +29,7 @@ export const SITE = {
   availableForWork: true,
 
   /**
-   * Per-locale résumé PDFs served from /public. Place both files in
+   * Per-locale resume PDFs served from /public. Place both files in
    * `public/` (setup guide in README) — the about page links each locale
    * to its own file via getResumePath().
    */
@@ -37,9 +37,18 @@ export const SITE = {
     en: "/resume-en.pdf",
     fa: "/resume-fa.pdf",
   },
+
+  resumeFilename: {
+    en: "AmirHo-Resume-EN.pdf",
+    fa: "AmirHo-Resume-FA.pdf",
+  },
 } as const;
 
-/** Résumé path for a locale (about page download buttons, §10.5). */
+/** Resume path for a locale (about page download buttons, §10.5). */
 export function getResumePath(locale: LocaleCode): string {
   return SITE.resume[locale];
+}
+
+export function getResumeFilename(locale: LocaleCode): string {
+  return SITE.resumeFilename[locale];
 }

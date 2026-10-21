@@ -6,13 +6,13 @@ import SkillGroup from "../components/SkillGroup.astro";
 import Button from "../components/Button.astro";
 import { EXPERIENCE } from "../data/experience";
 import { SKILL_GROUPS, type SkillLevel } from "../data/skills";
-import { getResumePath } from "../config/site";
+import { getResumeFilename, getResumePath } from "../config/site";
 import type { LocaleCode } from "../i18n/config";
 import { getLocalizedPath, t } from "../i18n/utils";
 
 /**
  * About (EN) — lead, story, scroll-drawn timeline, honest skills
- * matrix, résumé + creator cards. All copy comes from the dictionaries;
+ * matrix, resume + creator cards. All copy comes from the dictionaries;
  * the milestone and skills data come from the Phase 5 data modules.
  *
  * The timeline rail draws with scroll (scrubbed scaleY on the accent
@@ -115,9 +115,7 @@ const skillLabels: Record<SkillLevel, { label: string; hint: string }> = {
         <div class="mt-6">
           <Button
             href={getResumePath(locale)}
-            download={locale === "en"
-              ? "AmirHo-Resume-EN.pdf"
-              : "AmirHo-Resume-FA.pdf"}
+            download={getResumeFilename(locale)}
           >
             <svg
               class="size-4"

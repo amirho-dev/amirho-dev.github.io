@@ -62,7 +62,7 @@ Every page references /og-en.png or /og-fa.png (1200×630) in its OG/Twitter met
     resvg renders SVG <text> from font files it is handed — it never sees the site's Fontsource woff2 webfonts. The brand faces therefore come from three @expo-google-fonts/* packages, which ship raw static TTFs (JetBrains Mono, Space Grotesk, Vazirmatn). That is why those dependencies exist: the pages load woff2 via Fontsource, the OG rasterizer loads TTFs via expo-google-fonts — two pipelines, same typefaces. The * version spec on those three packages is deliberate: their versioning is per-font and independent, and your committed package-lock.json pins the exact resolved versions.
     System fonts are not loaded (loadSystemFonts: false), so output is deterministic — identical bytes on any machine. If no TTFs are found, the script exits with a message explaining the fix (escape hatch: drop your own TTFs into scripts/fonts/).
 
-Résumé PDFs
+resume PDFs
 
 The about page links each locale to its own file — /resume-en.pdf and /resume-fa.pdf. Place both PDFs in public/ and they deploy as-is. (The binary PDFs are not part of this repository; they are personal documents you supply.)
 Editing content
@@ -113,7 +113,7 @@ UI copy & dictionaries
 All interface strings live in src/i18n/dictionaries/. en.ts defines the Dictionary type; fa.ts must satisfy it — npm run check enforces parity, so add every new key to both files in the same change. Farsi style rules: proper نیم‌فاصله, Persian punctuation (، ؛ ؟), guillemets (« »), no letter-spacing or uppercase transforms on Persian, Persian digits in prose but Latin digits for versions, stats and code. Values that are intentionally Latin in both files (terminal commands, tech names, machine output) carry a comment saying so.
 Site data files
 File Owns
-src/config/site.ts Name, production URL, email, availability switch, résumé paths
+src/config/site.ts Name, production URL, email, availability switch, resume paths
 src/data/skills.ts Skills matrix (daily / comfortable / exploring) + marquee items
 src/data/socials.ts Social channels (URLs, handles, icons)
 src/data/experience.ts About-page timeline milestones (bilingual)

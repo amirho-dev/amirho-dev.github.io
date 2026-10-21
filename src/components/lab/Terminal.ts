@@ -321,7 +321,7 @@ export class Terminal {
 
   private print(
     text: string,
-    className = "whitespace-pre-wrap break-words",
+    className = "whitespace-pre-wrap wrap-break-word",
   ): void {
     this.line(className).textContent = text;
   }
@@ -369,7 +369,7 @@ export class Terminal {
 
   private printParts(
     parts: TerminalPart[],
-    className = "whitespace-pre-wrap break-words",
+    className = "whitespace-pre-wrap wrap-break-word",
   ): void {
     const row = this.line(className);
     parts.forEach((part) => row.appendChild(this.partSpan(part)));

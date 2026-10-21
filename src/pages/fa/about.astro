@@ -6,7 +6,7 @@ import SkillGroup from "../../components/SkillGroup.astro";
 import Button from "../../components/Button.astro";
 import { EXPERIENCE } from "../../data/experience";
 import { SKILL_GROUPS, type SkillLevel } from "../../data/skills";
-import { getResumePath } from "../../config/site";
+import { getResumePath, getResumeFilename } from "../../config/site";
 import type { LocaleCode } from "../../i18n/config";
 import { getLocalizedPath, t } from "../../i18n/utils";
 
@@ -108,9 +108,7 @@ const skillLabels: Record<SkillLevel, { label: string; hint: string }> = {
         <div class="mt-6">
           <Button
             href={getResumePath(locale)}
-            download={locale === "en"
-              ? "AmirHo-Resume-EN.pdf"
-              : "AmirHo-Resume-FA.pdf"}
+            download={getResumeFilename(locale)}
           >
             <svg
               class="size-4"

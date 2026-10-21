@@ -24,7 +24,6 @@ const { entry } = Astro.props;
 const { Content } = await render(entry);
 
 // Prev/next walk the timeline ASCENDING by year:
-// «قبلی» = پروژه‌ی قدیمی‌تر، «بعدی» = پروژه‌ی جدیدتر.
 const timeline = (
   await getCollection(
     "projects",

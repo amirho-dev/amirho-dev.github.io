@@ -21,7 +21,7 @@ import Footer from "../components/Footer.astro";
  *  · Renders the site-wide JSON-LD (Person + WebSite, translated) and
  *    merges any page-specific schema passed via `jsonLd`.
  *  · `<slot name="head" />` lets nested layouts inject extra head tags
- *    (used by Phase 10 for article metas).
+ *    (used by Phase 10 for article meta).
  *  · Cloudflare Web Analytics is rendered ONLY when a token is present
  *    (§10.6) — absent token = no script tag at all.
  *  · Identity data comes from the canonical sources: name/email from
@@ -140,7 +140,7 @@ const analyticsToken: string | undefined = import.meta.env
   <body class="flex min-h-dvh flex-col bg-bg font-sans text-text">
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:start-4 focus:z-[70] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-black"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:inset-s-4 focus:z-70 focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-black"
     >
       {dict.a11y.skipToContent}
     </a>
