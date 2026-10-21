@@ -64,7 +64,7 @@ const bootSequence = [
       composition mirrors under RTL (§7.4 audit). Clipped by overflow. */
   }
   <div
-    class="pointer-events-none absolute -end-10 top-1/2 -z-10 hidden -translate-y-1/2 select-none font-mono text-[clamp(10rem,22vw,18rem)] font-bold leading-none text-text/10 lg:block"
+    class="pointer-events-none absolute -inset-e-10 top-1/2 -z-10 hidden -translate-y-1/2 select-none font-mono text-[clamp(10rem,22vw,18rem)] font-bold leading-none text-text/10 lg:block"
     dir="ltr"
     aria-hidden="true"
   >
@@ -365,31 +365,32 @@ const bootSequence = [
       const startRotation = (): void => {
         if (!roleEl || roles.length < 2) return;
         const HOLD = 2.2;
-        rotationTl = gsap.timeline({ repeat: -1 });
+        const tl = gsap.timeline({ repeat: -1 });
+        rotationTl = tl;
         const queue = [...roles.slice(1), roles[0]];
         queue.forEach((role) => {
           if (isFa) {
-            rotationTl.to(roleEl, {
+            tl.to(roleEl, {
               y: -10,
               autoAlpha: 0,
               duration: 0.22,
               ease: "power2.in",
             });
-            rotationTl.call(() => {
+            tl.call(() => {
               roleEl.textContent = role;
             });
-            rotationTl.fromTo(
+            tl.fromTo(
               roleEl,
               { y: 10 },
               { y: 0, autoAlpha: 1, duration: 0.3, ease: "power2.out" },
             );
           } else {
-            rotationTl.to(roleEl, {
+            tl.to(roleEl, {
               duration: 0.7,
               scrambleText: { text: role, chars: "upperCase", speed: 1.1 },
             });
           }
-          rotationTl.to({}, { duration: HOLD });
+          tl.to({}, { duration: HOLD });
         });
       };
 
@@ -405,7 +406,7 @@ const bootSequence = [
           greetingSplit = new SplitText(greetingEl, { type: splitType });
         if (nameEl) nameSplit = new SplitText(nameEl, { type: splitType });
 
-        const pieces = (split: SplitText | null): HTMLElement[] => {
+        const pieces = (split: SplitText | null): Element[] => {
           if (!split) return [];
           return split.chars && split.chars.length > 0
             ? split.chars
