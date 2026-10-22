@@ -19,7 +19,7 @@ jobs:
       - name: Install, build, and upload your site
         uses: withastro/action@v6
         with:
-          node-version: "22.24.0"
+          node-version-file: ".nvmrc"
   deploy:
     needs: build
     runs-on: ubuntu-latest
